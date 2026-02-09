@@ -1,0 +1,69 @@
+:root {
+  font-family: "PingFang SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+  color: #1f1f1f;
+  background-color: #f5f6f8;
+  --app-bg: #f5f6f8;
+  --card-bg: #ffffff;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+}
+
+:root[data-theme='dark'] {
+  color: #e5e7eb;
+  background-color: #0f172a;
+  --app-bg: #0f172a;
+  --card-bg: #111827;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --border-color: #1f2937;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--app-bg);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.card-section {
+  margin-bottom: 16px;
+}
+
+.ant-card {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.ant-card-head-title,
+.ant-descriptions-title {
+  color: var(--text-primary);
+}
+
+.ant-table {
+  background: var(--card-bg);
+}
+
+.ant-table-thead > tr > th {
+  background: var(--card-bg);
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    font-size: 18px;
+  }
+}
