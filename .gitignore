@@ -89,6 +89,7 @@ storybook-static
 .vscode-test
 
 # macOS
+._*
 .DS_Store
 
 # Vim swap files
@@ -99,3 +100,6 @@ storybook-static
 .idea/
 .vscode/
 *.sw?
+
+
+

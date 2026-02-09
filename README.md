@@ -1,347 +1,275 @@
-# merchant-web
-AI 生成的纯前端 项目 ant + vue3
-# 商户后台接口文档（草案）
+# Merchant Web 项目文档
 
-> 说明：当前项目为静态 mock 数据。此文档用于后续接入真实接口。
-> 约定：所有接口返回统一结构 `{ code: 0, message: 'ok', data: ... }`。
+## 📋 项目概览
 
-## 通用约定
-- Base URL: `VITE_API_BASE_URL`
-- Header: `Authorization: Bearer <token>`
-- Header: `Content-Type: application/json`
-- 时间格式：`YYYY-MM-DD HH:mm:ss`
-- 分页参数：`page`（页码）、`pageSize`（每页数量）
+**项目名称**: Merchant Web（商户管理系统前端）  
+**项目描述**: AI 生成的纯前端项目，基于 Ant Design + Vue 3 构建的商户管理应用  
+**开发者**: xuailiang  
+**创建时间**: 2026年2月9日  
+**仓库状态**: 私有仓库  
+**主要语言**: Vue 3 + TypeScript
 
 ---
 
-## 商品管理
+## 🎯 项目目的
 
-### GET /products
-**用途**：获取商品列表  
-**Query**
-- `name` 商品名称
-- `code` 商品编码
-- `category` 类目
-- `brand` 品牌
-- `statuses` 商品状态（支持多选，重复参数）
-- `priceMin` / `priceMax` 售价区间
-- `stockMin` / `stockMax` 库存区间
-- `startDate` / `endDate` 上架日期区间
-- `page` / `pageSize`
-
-**Response**
-```
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "total": 120,
-    "list": [
-      {
-        "key": "p1",
-        "name": "星曜Pro 智能手机 256G",
-        "category": "数码/手机",
-        "price": 3499,
-        "cost": 2899,
-        "stock": 58,
-        "sales": 326,
-        "status": "上架中",
-        "listedAt": "2026-01-22",
-        "updatedAt": "2026-02-01 12:01:12",
-        "code": "10242601000224",
-        "brand": "星曜",
-        "image": "https://...",
-        "channel": "积分商城",
-        "shop": "星辰旗舰店"
-      }
-    ]
-  }
-}
-```
+本项目是一个商户端管理系统的前端应用，提供商户进行日常业务管理、数据查看和操作的用户界面。通过 AI 生成的方式创建初始项目框架，采用现代化的前端技术栈实现高效、美观的用户体验。
 
 ---
 
-## 订单管理
+## 🛠️ 技术栈
 
-### GET /orders
-**用途**：获取订单列表  
-**Query**
-- `orderId` 订单编号
-- `statuses` 订单状态（多选）
-- `orderCode` 下单号码
-- `productName` 商品名称
-- `phone` 收货人手机号
-- `orderStart` / `orderEnd` 下单时间区间
-- `payStart` / `payEnd` 支付时间区间
-- `page` / `pageSize`
+### 核心框架
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **Vue** | ^3.4.38 | 进行式的JavaScript框架，用于构建用户界面 |
+| **Vue Router** | ^4.4.0 | Vue应用的官方路由库 |
+| **TypeScript** | ^5.5.4 | 为JavaScript添加类型支持 |
 
-**Response**
+### UI组件库
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **Ant Design Vue** | ^4.2.6 | Ant Design在Vue中的实现，提供丰富的UI组件 |
+| **Ant Design Icons Vue** | ^7.0.1 | Ant Design图标库Vue版本 |
+
+### 数据可视化
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **@antv/g2plot** | ^2.4.31 | 蚂蚁集团开源的图表库，用于数据可视化 |
+
+### 工具库
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **dayjs** | ^1.11.11 | 轻量级的日期时间处理库 |
+| **xlsx** | ^0.18.5 | Excel文件读写库，支持导入导出功能 |
+
+### 构建工具
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **Vite** | ^5.4.1 | 新一代前端构建工具，提供极速开发体验 |
+| **@vitejs/plugin-vue** | ^5.1.2 | Vite官方Vue 3插件 |
+| **vue-tsc** | ^2.0.29 | Vue文件的TypeScript类型检查工具 |
+
+---
+
+## 📁 项目结构
+
 ```
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "total": 80,
-    "list": [
-      {
-        "id": "DD2026020501703",
-        "status": "取消",
-        "orderTime": "2026-02-05 17:03",
-        "payTime": "暂未获取到支付信息",
-        "orderCode": "13567546709",
-        "quantity": 1,
-        "unitPrice": "¥55",
-        "paidAmount": "¥60",
-        "payMethod": "暂未获取到支付信息",
-        "receiver": "admin",
-        "phone": "13567546709",
-        "note": "/",
-        "settlement": "未结算",
-        "items": [
-          {
-            "name": "测试1129 颜色 包色 内存 4G 容量规格 128GB",
-            "spec": "颜色：包色 / 内存：4G / 128GB",
-            "spu": "1002251200002102",
-            "image": "https://...",
-            "price": "¥55",
-            "qty": 1
-          }
-        ]
-      }
-    ]
-  }
-}
+merchant-web/
+├── src/                      # 源代码目录
+│   ├── components/          # 可复用组件
+│   ├── views/              # 页面组件
+│   ├── router/             # 路由配置
+│   ├── stores/             # 状态管理（Pinia）
+│   ├── api/                # API请求模块
+│   ├── utils/              # 工具函数
+│   ├── types/              # TypeScript类型定义
+│   ├── App.vue             # 根组件
+│   └── main.ts             # 应用入口文件
+├── public/                  # 静态资源
+│   ├── favicon.ico
+│   └── 其他静态文件
+├── docs/                    # 项目文档
+├── index.html              # HTML入口文件
+├── package.json            # 项目配置文件
+├── package-lock.json       # 依赖锁定文件
+├── vite.config.ts          # Vite配置文件
+├── tsconfig.json           # TypeScript配置文件
+├── tsconfig.node.json      # Node相关的TypeScript配置
+└── .gitignore              # Git忽略文件
+
 ```
 
 ---
 
-## 售后/退款中心
+## ⚙️ 配置文件说明
 
-### GET /after-sales
-**用途**：获取售后列表  
-**Query**
-- `keyword` 关键词（售后单号/订单号/客户）
-- `type` 售后类型
-- `status` 状态
-- `startDate` / `endDate` 申请时间区间
-- `page` / `pageSize`
+### package.json
+当前项目依赖配置包括：
+- **生产依赖**: Vue 3、Ant Design Vue、图表库、数据处理库
+- **开发依赖**: Vite、TypeScript、Vue插件等
 
-**Response**
-```
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "total": 20,
-    "list": [
-      {
-        "id": "AS20260204001",
-        "orderId": "DD2026020417142",
-        "customer": "周女士",
-        "type": "仅退款",
-        "status": "待审核",
-        "refundAmount": 60,
-        "payAmount": 60,
-        "reason": "未收到货",
-        "phone": "13567546709",
-        "applyTime": "2026-02-04 10:12"
-      }
-    ]
-  }
-}
-```
+### tsconfig.json
+配置TypeScript编译器选项：
+- 目标: ES2020
+- 启用严格模式检查
+- 检查未使用的变量和参数
+- 禁止Switch的fall-through
 
 ---
 
-## 结算管理
+## 🚀 快速开始
 
-### GET /settlements/payments
-**用途**：打款单列表  
-**Query**
-- `supplier` 供货商名称
-- `status` 是否结算
-- `summary` 是否汇总
-- `startDate` / `endDate` 结算日期区间
-- `page` / `pageSize`
+### 前置要求
+- Node.js >= 16.0.0
+- npm >= 8.0.0 或 yarn / pnpm
 
-### GET /settlements/details
-**用途**：打款单明细  
-**Query**
-- `supplier` 供货商名称
-- `status` 是否结算
-- `startDate` / `endDate` 结算日期区间
-- `page` / `pageSize`
+### 安装依赖
 
-**Response** 同上，字段参考页面表格结构
-
----
-
-## 资源管理（可选）
-
-### GET /assets
-**用途**：素材列表（图片/视频）  
-**Query**
-- `type` 素材类型（image/video）
-- `folderId` 分类
-- `keyword` 搜索关键词
-- `page` / `pageSize`
-
-### POST /assets
-**用途**：上传素材  
-**Body**
-- `type` 素材类型
-- `name` 名称
-- `url` 文件地址（或上传后回填）
-- `folderId`
-
----
-
-> 如果你需要，我可以继续补充 “登录、角色权限、营销活动、发货管理”等接口文档。
-
----
-
-## 登录 / 权限
-
-### POST /auth/login
-**用途**：登录并获取 Token  
-**Body**
-- `username` 用户名/手机号
-- `password` 密码
-
-**Response**
-```
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "token": "Bearer xxx",
-    "user": {
-      "id": "u1",
-      "name": "管理员",
-      "role": "admin",
-      "permissions": ["dashboard:view", "orders:view", "..."]
-    }
-  }
-}
+```bash
+npm install
 ```
 
-### GET /auth/profile
-**用途**：获取当前用户信息  
-**Header**
-- `Authorization: Bearer <token>`
+### 开发环境运行
 
-### GET /auth/permissions
-**用途**：获取权限矩阵与角色  
-**Response**
+```bash
+npm run dev
 ```
-{
-  "code": 0,
-  "message": "ok",
-  "data": {
-    "roles": [
-      { "key": "admin", "name": "管理员" },
-      { "key": "operator", "name": "运营人员" }
-    ],
-    "permissions": [
-      { "key": "orders:view", "label": "订单查看" },
-      { "key": "orders:ship", "label": "订单发货" }
-    ],
-    "matrix": {
-      "admin": ["orders:view", "orders:ship"],
-      "operator": ["orders:view"]
-    }
-  }
-}
+
+应用将在 `http://localhost:5173` 运行。
+
+**开发特性:**
+- 热模块更新 (HMR)
+- 实时TypeScript类型检查
+- 快速的编译和刷新
+
+### 生产构建
+
+```bash
+npm run build
+```
+
+### 预览生产构建
+
+```bash
+npm run preview
 ```
 
 ---
 
-## 营销活动 / 优惠券
+## 📚 核心依赖详解
 
-### GET /marketing/coupons
-**用途**：优惠券列表  
-**Query**
-- `keyword` 关键词
-- `status` 状态
-- `startDate` / `endDate` 有效期
-- `page` / `pageSize`
+### Ant Design Vue
+企业级UI库，提供50+高质量组件：
+- 布局、菜单、表格
+- 表单、输入框、选择框
+- 模态框、抽屉、气泡卡片
+- 日期选择、时间选择、级联选择
 
-### POST /marketing/coupons
-**用途**：创建优惠券  
-**Body**
-- `name` 名称
-- `type` 类型（满减/折扣/无门槛）
-- `amount` 面额
-- `threshold` 使用门槛
-- `stock` 发放数量
-- `startTime` / `endTime` 有效期
-- `scopes` 使用范围（类目/商品ID）
+### Vue Router
+单页应用路由库：
+- 动态路由匹配
+- 嵌套路由
+- 路由懒加载
+- 导��守卫
 
-### GET /marketing/campaigns
-**用途**：活动列表  
-**Query**
-- `type` 活动类型（秒杀/满减/拼团等）
-- `status` 状态
-- `page` / `pageSize`
+### @antv/g2plot
+图表库，支持：
+- 折线图、柱状图
+- 散点图、热力图
+- 仪表盘、漏斗图
 
-### POST /marketing/campaigns
-**用途**：创建活动  
-**Body**
-- `name` 活动名称
-- `type` 活动类型
-- `startTime` / `endTime`
-- `rules` 活动规则
-- `products` 关联商品列表
+### xlsx
+Excel处理库：
+- 读取/生成Excel文件
+- 数据导入导出
+- 格式处理
+
+### dayjs
+日期时间处理：
+- 日期格式化
+- 日期计算
+- 国际化支持
 
 ---
 
-## 发货管理
+## 📝 开发规范
 
-### GET /shipping/orders
-**用途**：待发货订单  
-**Query**
-- `keyword` 订单号/收件人
-- `status` 状态（待发货/已发货）
-- `page` / `pageSize`
+### TypeScript使用
+- ✅ 启用严格模式
+- ✅ 检查未使用的变量
+- ✅ 为函数添加类型注解
+- ✅ 为对象属性添加类型定义
 
-### POST /shipping/ship
-**用途**：发货  
-**Body**
-- `orderId` 订单号
-- `expressList` 多快递数组
-    - `company` 快递公司
-    - `trackingNo` 运单号
-    - `items` 发货商品明细
-
-### POST /shipping/batch
-**用途**：批量发货  
-**Body**
-- `fileUrl` 上传的模板文件地址
-
-### GET /shipping/tracking
-**用途**：物流轨迹  
-**Query**
-- `trackingNo` 运单号
-- `company` 快递公司
+### 代码风格
+- 使用TypeScript进行类型检查
+- 遵循Vue 3 Composition API最佳实践
+- 组件使用单文件组件格式 (.vue)
+- 正确处理模块导入
 
 ---
 
-## 运费管理
+## 🔧 常见问题
 
-### GET /shipping/templates
-**用途**：运费模板列表  
-**Query**
-- `keyword` 模板名称
-- `type` 计费方式（按件/按重）
-- `page` / `pageSize`
+### Q: 如何添加新的页面？
+A: 在 `src/views` 目录创建新的Vue文件，然后在路由文件中注册。
 
-### POST /shipping/templates
-**用途**：新增运费模板  
-**Body**
-- `name` 模板名称
-- `shopId` 店铺
-- `type` 计费方式
-- `defaultRule` 默认运费规则
-- `areaRules` 指定地区规则数组
-- `freeRules` 包邮规则
-- `excludeAreas` 不配送区域
+### Q: 如何使用Ant Design组件？
+A: 直接从 `ant-design-vue` 导入所需组件。
+
+### Q: 如何处理日期？
+A: 使用 dayjs 库进行日期处理。
+
+### Q: 如何导出Excel文件？
+A: 使用 xlsx 库创建和导出Excel文件。
+
+---
+
+## 📦 部署指南
+
+### 构建优化
+1. 运行 `npm run build` 生成生产版本
+2. 分析构建产物大小
+3. 配置CDN加速静态资源
+4. 启用gzip压缩
+
+### 部署步骤
+```bash
+# 1. 构建
+npm run build
+
+# 2. 上传dist文件夹到服务器
+# 3. 配置Web服务器（nginx/apache）
+# 4. 配置反向代理
+# 5. 测试验证
+```
+
+---
+
+## 🤝 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 📊 项目统计
+
+| 指标 | 数值 |
+|------|------|
+| 仓库大小 | 1.9 MB |
+| Stars | 0 |
+| Forks | 0 |
+| Open Issues | 0 |
+| 最后更新 | 2026年2月9日 |
+
+---
+
+## ✨ 特色功能（计划）
+
+- [ ] 商户账户管理
+- [ ] 订单管理系统
+- [ ] 数据分析仪表板
+- [ ] 财务报表统计
+- [ ] 商品库存管理
+- [ ] 客户关系管理(CRM)
+- [ ] 权限控制系统
+- [ ] 实时通知提醒
+
+---
+
+## 📚 推荐学习资源
+
+- [Vue 3官方文档](https://vuejs.org/)
+- [Vite官方文档](https://vitejs.dev/)
+- [Ant Design Vue文档](https://www.antdv.com/)
+- [Vue Router文档](https://router.vuejs.org/)
+- [TypeScript文档](https://www.typescriptlang.org/)
+
+---
+
+**最后更新**: 2026年2月9日  
+**版本**: 0.0.0（初始版本）
