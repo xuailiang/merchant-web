@@ -24,12 +24,20 @@
           <a-button type="primary">查询</a-button>
           <a-button @click="resetFilters">重置</a-button>
           <a-button v-if="hasPermission('after_sales:view')">导出</a-button>
+          <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
         </a-space>
       </a-form>
     </a-card>
 
     <a-card>
-      <a-table :columns="columns" :data-source="filteredCases" :pagination="{ pageSize: 8 }" :scroll="{ x: 1400 }">
+      <a-table
+        :columns="columns"
+        :data-source="filteredCases"
+        :pagination="{ pageSize: 8 }"
+        :scroll="{ x: 1400 }"
+        :loading="tableLoading"
+        :locale="{ emptyText: h(TableEmpty, { description: '暂无售后数据' }) }"
+      >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
             <a-tag :color="getAfterSalesStatusMeta(record.status).color">{{ getAfterSalesStatusMeta(record.status).label }}</a-tag>
@@ -123,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import { usePersistedFilters } from '../utils/usePersistedFilters'
@@ -136,6 +144,9 @@ import {
 } from '../utils/statusConfig'
 import { fetchAfterSales } from '../api/endpoints'
 import { message } from 'ant-design-vue'
+import ColumnSetting from '../components/ColumnSetting.vue'
+import TableEmpty from '../components/TableEmpty.vue'
+import { useColumnConfig } from '../utils/columnConfig'
 
 dayjs.extend(isBetween)
 
@@ -344,7 +355,7 @@ onMounted(async () => {
   }
 })
 
-const columns = [
+const allColumns = [
   { title: '售后单号', dataIndex: 'id', key: 'id', width: 160 },
   { title: '订单编号', dataIndex: 'orderId', key: 'orderId', width: 160 },
   { title: '客户', dataIndex: 'customer', key: 'customer', width: 100 },
@@ -356,6 +367,9 @@ const columns = [
   { title: '状态', dataIndex: 'status', key: 'status', width: 120 },
   { title: '操作', key: 'action', fixed: 'right', width: 140 },
 ]
+
+const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:after-sales', allColumns)
+const tableLoading = ref(false)
 
 const productColumns = [
   { title: '商品', key: 'product' },

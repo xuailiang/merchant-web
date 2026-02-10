@@ -17,6 +17,7 @@
           <a-space>
             <a-button type="primary">查询</a-button>
             <a-button @click="resetFilters">重置</a-button>
+            <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
           </a-space>
         </a-form>
       </template>
@@ -28,6 +29,8 @@
         :row-class-name="rowClassName"
         row-key="id"
         :custom-row="(record) => ({ 'data-export-id': record.id })"
+        :loading="tableLoading"
+        :locale="{ emptyText: h(TableEmpty, { description: '暂无导出记录' }) }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
@@ -48,11 +51,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TableWrapper from '../components/TableWrapper.vue'
 import { getExportTasks, normalizeExportStatus, removeExportTask, createExportTask, type ExportTask } from '../utils/exports'
 import { message } from 'ant-design-vue'
+import ColumnSetting from '../components/ColumnSetting.vue'
+import TableEmpty from '../components/TableEmpty.vue'
+import { useColumnConfig } from '../utils/columnConfig'
 
 const router = useRouter()
 const route = useRoute()
@@ -87,7 +93,7 @@ const focusRow = () => {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
-const columns = [
+const allColumns = [
   { title: '任务名称', dataIndex: 'title', key: 'title', width: 220 },
   { title: '任务ID', dataIndex: 'id', key: 'id', width: 180 },
   { title: '模块', dataIndex: 'module', key: 'module', width: 120 },
@@ -97,6 +103,9 @@ const columns = [
   { title: '状态', dataIndex: 'status', key: 'status', width: 120 },
   { title: '操作', key: 'action', fixed: 'right', width: 160 },
 ]
+
+const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:exports', allColumns)
+const tableLoading = ref(false)
 
 const moduleOptions = [
   { label: '订单', value: 'orders' },

@@ -13,15 +13,31 @@
         <img class="brand-logo-img" src="/yc-logo.png" alt="一卡通" />
         <div class="brand-text" v-if="!collapsed">一卡通商户后台</div>
       </div>
-      <a-menu
-        theme="dark"
-        mode="inline"
-        :selectedKeys="[safeSelectedKey]"
-        v-model:openKeys="menuOpenKeys"
-        :items="visibleMenuItems"
-        @click="onMenuClick"
-        @openChange="onOpenChange"
-      />
+      <div class="side-menu">
+        <div v-for="item in visibleMenuItems" :key="item.key" class="side-group">
+          <div
+            class="side-root"
+            :class="{ active: menuOpenKeys.includes(item.key) }"
+            @click="toggleRoot(item.key)"
+          >
+            <component v-if="item.icon" :is="item.icon" class="side-icon" />
+            <span v-if="!collapsed" class="side-label">{{ item.label }}</span>
+            <RightOutlined v-if="item.children?.length && !collapsed" class="side-caret" :class="{ open: menuOpenKeys.includes(item.key) }" />
+          </div>
+          <div v-if="item.children?.length && menuOpenKeys.includes(item.key) && !collapsed" class="side-children">
+            <div
+              v-for="child in item.children"
+              :key="child.key"
+              class="side-child"
+              :class="{ active: safeSelectedKey === child.key }"
+              @click.stop="handleMenuClick(child.key)"
+            >
+              <component v-if="child.icon" :is="child.icon" class="side-icon" />
+              <span class="side-label">{{ child.label }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </a-layout-sider>
 
     <a-layout>
@@ -41,25 +57,19 @@
               <a-switch v-model:checked="isDark" checked-children="暗" un-checked-children="亮" />
             </a-space>
 
-            <a-dropdown :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
+            <a-dropdown
+              :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
+              :menu="{ items: inboxMenuItems, onClick: onInboxMenuClick }"
+            >
               <a-badge :count="unreadCount" :offset="[4, -2]">
                 <BellOutlined class="header-icon" />
               </a-badge>
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item v-for="item in inboxPreview" :key="item.id" @click="openMessage(item)">
-                    <div class="notice-item">
-                      <div class="notice-title">{{ item.title }}</div>
-                      <div class="notice-desc">{{ item.desc }}</div>
-                    </div>
-                  </a-menu-item>
-                  <a-menu-divider />
-                  <a-menu-item @click="openInbox = true">查看全部站内信</a-menu-item>
-                </a-menu>
-              </template>
             </a-dropdown>
 
-            <a-dropdown :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
+            <a-dropdown
+              :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
+              :menu="{ items: userMenuItems, onClick: onUserMenuClick }"
+            >
               <a-space class="user-entry">
                 <a-avatar size="small" class="header-avatar">店</a-avatar>
                 <div class="header-user">
@@ -68,15 +78,6 @@
                 </div>
                 <DownOutlined class="user-caret" />
               </a-space>
-              <template #overlay>
-                <a-menu>
-                <a-menu-item @click="router.push('/account/settings')">账户设置</a-menu-item>
-                <a-menu-item @click="router.push('/account/store')">门店信息</a-menu-item>
-                <a-menu-item @click="router.push('/help')">帮助中心</a-menu-item>
-                  <a-menu-divider />
-                  <a-menu-item @click="onLogout">退出登录</a-menu-item>
-                </a-menu>
-              </template>
             </a-dropdown>
           </a-space>
         </div>
@@ -92,14 +93,11 @@
         >
           <a-tab-pane v-for="tab in tabs" :key="tab.key" :closable="tab.closable">
             <template #tab>
-              <a-dropdown trigger="contextmenu">
-                <span class="tab-label">{{ tab.title }}</span>
-                <template #overlay>
-                  <a-menu>
-                    <a-menu-item @click="closeOthers(tab.key)">关闭其它</a-menu-item>
-                    <a-menu-item @click="closeAll">关闭全部</a-menu-item>
-                  </a-menu>
-                </template>
+              <a-dropdown
+                trigger="contextmenu"
+                :menu="{ items: tabMenuItems, onClick: onTabMenuClick }"
+              >
+                <span class="tab-label" @contextmenu.prevent="setTabContext(tab.key)">{{ tab.title }}</span>
               </a-dropdown>
             </template>
           </a-tab-pane>
@@ -159,7 +157,6 @@
 <script setup lang="ts">
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { MenuProps } from 'ant-design-vue'
 import {
   DashboardOutlined,
   ShoppingCartOutlined,
@@ -173,6 +170,7 @@ import {
   MenuUnfoldOutlined,
   BellOutlined,
   DownOutlined,
+  RightOutlined,
 } from '@ant-design/icons-vue'
 import { clearAuth, getName, getRole } from '../utils/auth'
 import { setThemeMode, themeMode } from '../utils/theme'
@@ -185,16 +183,24 @@ const route = useRoute()
 
 const role = ref(getRole() ?? 'operator')
 
-const menuItems: MenuProps['items'] = [
+type MenuNode = {
+  key: string
+  label: string
+  icon?: any
+  perm?: string
+  children?: MenuNode[]
+}
+
+const menuItems: MenuNode[] = [
   {
     key: 'dashboard',
-    icon: () => h(DashboardOutlined),
+    icon: DashboardOutlined,
     label: '仪表盘',
     perm: 'dashboard:view',
   },
   {
-    key: 'orders',
-    icon: () => h(ShoppingCartOutlined),
+    key: 'orders-root',
+    icon: ShoppingCartOutlined,
     label: '订单管理',
     perm: 'orders:view',
     children: [
@@ -205,8 +211,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'shipping-center',
-    icon: () => h(RocketOutlined),
+    key: 'shipping-root',
+    icon: RocketOutlined,
     label: '发货中心',
     perm: 'shipping:center',
     children: [
@@ -215,8 +221,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'supply-manage',
-    icon: () => h(AppstoreOutlined),
+    key: 'supply-root',
+    icon: AppstoreOutlined,
     label: '供货管理',
     perm: 'supply:view',
     children: [
@@ -226,8 +232,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'products',
-    icon: () => h(AppstoreOutlined),
+    key: 'products-root',
+    icon: AppstoreOutlined,
     label: '商品管理',
     perm: 'products:view',
     children: [
@@ -239,8 +245,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'customers',
-    icon: () => h(TeamOutlined),
+    key: 'customers-root',
+    icon: TeamOutlined,
     label: '客户管理',
     perm: 'customers:view',
     children: [
@@ -250,8 +256,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'marketing',
-    icon: () => h(GiftOutlined),
+    key: 'marketing-root',
+    icon: GiftOutlined,
     label: '营销中心',
     perm: 'marketing:view',
     children: [
@@ -262,8 +268,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'ops-center',
-    icon: () => h(AppstoreOutlined),
+    key: 'ops-root',
+    icon: AppstoreOutlined,
     label: '运营中心',
     perm: 'ops:view',
     children: [
@@ -274,8 +280,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'finance',
-    icon: () => h(WalletOutlined),
+    key: 'finance-root',
+    icon: WalletOutlined,
     label: '财务中心',
     perm: 'finance:view',
     children: [
@@ -285,8 +291,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'settings',
-    icon: () => h(SettingOutlined),
+    key: 'settings-root',
+    icon: SettingOutlined,
     label: '系统设置',
     perm: 'settings:view',
     children: [
@@ -298,8 +304,8 @@ const menuItems: MenuProps['items'] = [
     ],
   },
   {
-    key: 'decor',
-    icon: () => h(AppstoreOutlined),
+    key: 'decor-root',
+    icon: AppstoreOutlined,
     label: '店铺装修',
     perm: 'decor:view',
     children: [
@@ -309,11 +315,11 @@ const menuItems: MenuProps['items'] = [
   },
 ]
 
-const filterMenu = (items: MenuProps['items']): MenuProps['items'] => {
+const filterMenu = (items: MenuNode[]): MenuNode[] => {
   return (items ?? [])
     .map((item) => {
-      if (!item || typeof item === 'string') return item
-      const canView = !('perm' in item) || hasPermission((item as any).perm)
+      if (!item) return item
+      const canView = !item.perm || hasPermission(item.perm)
       if (!canView) return null
       if (item.children) {
         const children = filterMenu(item.children)
@@ -322,55 +328,66 @@ const filterMenu = (items: MenuProps['items']): MenuProps['items'] => {
       return item
     })
     .filter((item) => {
-      if (!item || typeof item === 'string') return false
-      if ((item as any).children && (item as any).children.length === 0) return false
+      if (!item) return false
+      if (item.children && item.children.length === 0) return false
       return true
-    }) as MenuProps['items']
+    }) as MenuNode[]
 }
 
 const visibleMenuItems = computed(() => {
   const currentRole = role.value
   const roleFiltered = menuItems
     ?.map((item) => {
-      if (!item || typeof item === 'string') return item
-      if (item.key === 'finance' && currentRole !== 'admin' && currentRole !== 'finance') {
+      if (!item) return item
+      if (item.key === 'finance-root' && currentRole !== 'admin' && currentRole !== 'finance') {
         return null
       }
-      if (item.key === 'settings' && currentRole !== 'admin') {
+      if (item.key === 'settings-root' && currentRole !== 'admin') {
         return null
       }
       return item
     })
-    .filter(Boolean) as MenuProps['items']
+    .filter(Boolean) as MenuNode[]
   return filterMenu(roleFiltered)
 })
+
 
 const selectedKey = computed(() => {
   const matched = [...route.matched].reverse().find((item) => item.meta?.key)
   return (matched?.meta?.key as string | undefined) ?? 'dashboard'
 })
 
-const openKeys = computed(() => {
-  const parentKey = (route.meta?.parentKey as string | undefined) ?? selectedKey.value
-  return [parentKey]
-})
-
-const flattenMenuKeys = (items: MenuProps['items'], keys: Set<string> = new Set()) => {
+const flattenMenuKeys = (items: MenuNode[], keys: Set<string> = new Set()) => {
   const list = Array.isArray(items) ? items : []
   list.forEach((item) => {
-    if (!item || typeof item === 'string') return
+    if (!item) return
     if (item.key) keys.add(String(item.key))
     if (item.children) flattenMenuKeys(item.children, keys)
   })
   return keys
 }
 
-const menuKeySet = computed(() => flattenMenuKeys(visibleMenuItems))
+const menuKeySet = computed(() => flattenMenuKeys(visibleMenuItems.value))
 const rootMenuKeys = computed(() =>
   (visibleMenuItems.value ?? [])
-    .map((item) => (item && typeof item !== 'string' ? String((item as any).key) : ''))
+    .map((item) => (item ? String(item.key) : ''))
     .filter(Boolean)
 )
+
+const menuParentMap = computed(() => {
+  const map: Record<string, string> = {}
+  const walk = (items: MenuNode[], parent?: string) => {
+    const list = Array.isArray(items) ? items : []
+    list.forEach((item) => {
+      if (!item) return
+      const key = String(item.key)
+      if (parent) map[key] = parent
+      if (item.children) walk(item.children, key)
+    })
+  }
+  walk(visibleMenuItems.value ?? [])
+  return map
+})
 
 const safeSelectedKey = computed(() => {
   if (menuKeySet.value.has(selectedKey.value)) return selectedKey.value
@@ -395,14 +412,9 @@ watch(
   { immediate: true }
 )
 
-const onOpenChange: MenuProps['onOpenChange'] = (keys) => {
-  const rootKeys = keys.filter((key) => rootMenuKeys.value.includes(String(key))).map(String)
-  const latestRoot = rootKeys.find((key) => !menuOpenKeys.value.includes(key)) ?? rootKeys[rootKeys.length - 1]
-  menuOpenKeys.value = latestRoot ? [latestRoot] : []
-}
-
-const onMenuClick: MenuProps['onClick'] = ({ key }) => {
-  const parentKey = (route.meta?.parentKey as string | undefined) ?? String(key)
+const handleMenuClick = (key: string) => {
+  const keyStr = String(key)
+  const parentKey = menuParentMap.value[keyStr] ?? keyStr
   if (rootMenuKeys.value.includes(parentKey)) {
     menuOpenKeys.value = [parentKey]
   }
@@ -448,6 +460,11 @@ const onMenuClick: MenuProps['onClick'] = ({ key }) => {
     'decor-page': '/decor/page',
   }
   router.push(map[key as string] ?? '/dashboard')
+}
+
+const toggleRoot = (key: string) => {
+  if (!rootMenuKeys.value.includes(key)) return
+  menuOpenKeys.value = menuOpenKeys.value[0] === key ? [] : [key]
 }
 
 const merchantName = ref(getName())
@@ -497,6 +514,21 @@ const ensureTab = () => {
 const onTabChange = (key: string) => {
   const target = tabs.value.find((tab) => tab.key === key)
   if (target) router.push(target.path)
+}
+
+const tabContextKey = ref<string | null>(null)
+const tabMenuItems = [
+  { key: 'close-others', label: '关闭其它' },
+  { key: 'close-all', label: '关闭全部' },
+]
+
+const setTabContext = (key: string) => {
+  tabContextKey.value = key
+}
+
+const onTabMenuClick = ({ key }: { key: string }) => {
+  if (key === 'close-others' && tabContextKey.value) closeOthers(tabContextKey.value)
+  if (key === 'close-all') closeAll()
 }
 
 const onTabEdit = (key: string | MouseEvent, action: 'add' | 'remove') => {
@@ -567,6 +599,45 @@ const syncInbox = () => {
 
 const unreadCount = computed(() => inboxMessages.value.filter((item) => item.unread).length)
 const inboxPreview = computed(() => inboxMessages.value.slice(0, 3))
+
+const inboxMenuItems = computed(() => [
+  ...inboxPreview.value.map((item) => ({
+    key: `msg-${item.id}`,
+    label: h('div', { class: 'notice-item' }, [
+      h('div', { class: 'notice-title' }, item.title),
+      h('div', { class: 'notice-desc' }, item.desc),
+    ]),
+  })),
+  { type: 'divider' },
+  { key: 'open-inbox', label: '查看全部站内信' },
+])
+
+const onInboxMenuClick = ({ key }: { key: string }) => {
+  if (key === 'open-inbox') {
+    openInbox.value = true
+    return
+  }
+  if (key.startsWith('msg-')) {
+    const id = key.replace('msg-', '')
+    const item = inboxMessages.value.find((msg) => msg.id === id)
+    if (item) openMessage(item)
+  }
+}
+
+const userMenuItems = [
+  { key: 'account-settings', label: '账户设置' },
+  { key: 'store-info', label: '门店信息' },
+  { key: 'help-center', label: '帮助中心' },
+  { type: 'divider' },
+  { key: 'logout', label: '退出登录' },
+]
+
+const onUserMenuClick = ({ key }: { key: string }) => {
+  if (key === 'account-settings') router.push('/account/settings')
+  if (key === 'store-info') router.push('/account/store')
+  if (key === 'help-center') router.push('/help')
+  if (key === 'logout') onLogout()
+}
 
 const filteredInbox = computed(() => {
   return inboxMessages.value.filter((item) => {
@@ -641,6 +712,84 @@ onMounted(() => {
 
 .layout-sider :deep(.ant-layout-sider-zero-width-trigger) {
   display: none;
+}
+
+.side-menu {
+  padding: 6px 0 16px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.side-group + .side-group {
+  margin-top: 4px;
+}
+
+.side-root {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 20px;
+  cursor: pointer;
+  border-radius: 10px;
+  margin: 0 12px;
+  transition: background 0.2s ease;
+}
+
+.side-root:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.side-root.active {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.side-icon {
+  font-size: 16px;
+}
+
+.side-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.side-caret {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+.side-caret.open {
+  transform: rotate(90deg);
+}
+
+.side-children {
+  margin: 4px 0 8px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.side-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.78);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.side-child:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.side-child.active {
+  background: #1677ff;
+  color: #fff;
 }
 
 .brand {

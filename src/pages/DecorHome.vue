@@ -8,9 +8,10 @@
           <div class="toolbar-meta">当前版本：V3 · 上次保存 10:32 · 草稿</div>
         </div>
         <a-space>
+          <a-tag :color="dirty ? 'orange' : 'green'">{{ dirty ? '未保存' : '已保存' }}</a-tag>
           <a-button @click="showPreview = true">预览</a-button>
-          <a-button>保存草稿</a-button>
-          <a-button type="primary">发布上线</a-button>
+          <a-button @click="saveDraft">保存草稿</a-button>
+          <a-button type="primary" @click="publishPage">发布上线</a-button>
         </a-space>
       </div>
     </a-card>
@@ -188,9 +189,11 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, reactive, ref } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import AssetPicker from '../components/AssetPicker.vue'
 import type { AssetItem } from '../mock/assets'
+import { message } from 'ant-design-vue'
+import { useDirtyGuard } from '../utils/useDirtyGuard'
 
 const palette = [
   { type: '轮播', title: '轮播图', desc: '首页Banner轮播', thumbClass: 'thumb-carousel' },
@@ -214,6 +217,32 @@ const blocks = reactive([
   { id: 'b4', type: '商品列表-4', title: '热卖榜单' },
   { id: 'b5', type: '品牌墙', title: '合作品牌', imageUrl: 'https://picsum.photos/seed/home2/1200/600' },
 ])
+
+const dirty = ref(false)
+const snapshot = ref('')
+
+const buildSnapshot = () =>
+  JSON.stringify({
+    blocks: JSON.parse(JSON.stringify(blocks)),
+  })
+
+const markSaved = () => {
+  snapshot.value = buildSnapshot()
+  dirty.value = false
+}
+
+onMounted(() => {
+  markSaved()
+})
+
+watch(
+  () => buildSnapshot(),
+  (val) => {
+    dirty.value = val !== snapshot.value
+  }
+)
+
+useDirtyGuard(dirty, { message: '首页装修未保存，确认离开吗？' })
 
 const dragIndex = ref<number | null>(null)
 const draggingPalette = ref<{ type: string; title: string } | null>(null)
@@ -287,6 +316,16 @@ const addBlock = (item: { type: string; title: string }, index?: number) => {
 
 const removeBlock = (index: number) => {
   blocks.splice(index, 1)
+}
+
+const saveDraft = () => {
+  message.success('草稿已保存')
+  markSaved()
+}
+
+const publishPage = () => {
+  message.success('首页已发布')
+  markSaved()
 }
 
 const moveUp = (index: number) => {

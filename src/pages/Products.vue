@@ -92,16 +92,17 @@
       <template #actions>
         <a-space class="batch-actions" wrap>
           <a-button v-if="hasPermission('products:create')" type="primary" @click="goCreate">新增商品</a-button>
-          <a-button v-if="hasPermission('products:batch')">批量上架</a-button>
-          <a-button v-if="hasPermission('products:batch')">批量下架</a-button>
-          <a-button v-if="hasPermission('products:batch')">批量增加库存</a-button>
-          <a-button v-if="hasPermission('products:delete')" danger>批量删除</a-button>
+          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('up')">批量上架</a-button>
+          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('down')">批量下架</a-button>
+          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('stock')">批量增加库存</a-button>
+          <a-button v-if="hasPermission('products:delete')" danger @click="runBatchAction('delete')">批量删除</a-button>
           <a-button v-if="hasPermission('products:export')" type="dashed">导出数据</a-button>
-        <a-button @click="toggleView">
-          {{ viewMode === 'table' ? '卡片展示' : '表格展示' }}
-        </a-button>
-      </a-space>
-    </template>
+          <a-button @click="toggleView">
+            {{ viewMode === 'table' ? '卡片展示' : '表格展示' }}
+          </a-button>
+          <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
+        </a-space>
+      </template>
 
       <template v-if="activeTab === 'draft'">
         <a-table :columns="draftColumns" :data-source="drafts" :pagination="{ pageSize: 6 }" :scroll="{ x: 1000 }">
@@ -220,15 +221,12 @@
                     <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{ action.label }}</RouterLink>
                     <a-button v-else-if="isActionAllowed(action)" type="link" :danger="action.danger">{{ action.label }}</a-button>
                   </template>
-                  <a-dropdown v-if="getProductMoreActions(item).length" :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
+                  <a-dropdown
+                    v-if="getProductMoreActions(item).length"
+                    :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
+                    :menu="{ items: getProductMoreMenuItems(item) }"
+                  >
                     <a-button type="link">更多</a-button>
-                    <template #overlay>
-                      <a-menu>
-                        <a-menu-item v-for="action in getProductMoreActions(item)" :key="action.key">
-                          {{ action.label }}
-                        </a-menu-item>
-                      </a-menu>
-                    </template>
                   </a-dropdown>
                 </div>
               </div>
@@ -251,6 +249,9 @@
         :pagination="{ pageSize: 6 }"
         :scroll="{ x: 1300 }"
         class="products-table"
+        :loading="tableLoading"
+        :locale="{ emptyText: h(TableEmpty, { description: '暂无商品数据' }) }"
+        :row-selection="rowSelection"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'info'">
@@ -306,15 +307,9 @@
               <a-dropdown
                 v-if="getProductMoreActions(record).length"
                 :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
+                :menu="{ items: getProductMoreMenuItems(record) }"
               >
                 <a-button size="small" class="action-btn">更多</a-button>
-                <template #overlay>
-                  <a-menu>
-                    <a-menu-item v-for="action in getProductMoreActions(record)" :key="action.key">
-                      {{ action.label }}
-                    </a-menu-item>
-                  </a-menu>
-                </template>
               </a-dropdown>
             </div>
           </template>
@@ -325,16 +320,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import { RouterLink, useRouter } from 'vue-router'
 import TableWrapper from '../components/TableWrapper.vue'
+import ColumnSetting from '../components/ColumnSetting.vue'
+import TableEmpty from '../components/TableEmpty.vue'
 import { useIsMobile } from '../utils/useIsMobile'
 import { usePersistedFilters } from '../utils/usePersistedFilters'
 import { hasPermission } from '../utils/permissions'
 import { fetchProducts } from '../api/endpoints'
-import { message } from 'ant-design-vue'
+import { message, Modal, notification } from 'ant-design-vue'
+import { useColumnConfig } from '../utils/columnConfig'
 import {
   productActionConfig,
   productStatusActions,
@@ -350,7 +348,7 @@ const drafts = ref<Array<{ id: string; title: string; updatedAt: string; image?:
 const DRAFT_KEY = 'product-drafts'
 const warningThreshold = ref(30)
 dayjs.extend(isBetween)
-const columns = [
+const allColumns = [
   { title: '商品基本信息', dataIndex: 'info', key: 'info', width: 320 },
   { title: '成本价/利润率(主SKU)', dataIndex: 'profit', key: 'profit', width: 170 },
   { title: '售价/库存/销量', dataIndex: 'priceStock', key: 'priceStock', width: 170 },
@@ -360,7 +358,10 @@ const columns = [
   { title: '操作', key: 'action', width: 200 },
 ]
 
-const products = [
+const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:products', allColumns)
+const tableLoading = ref(false)
+
+const products = ref([
   {
     key: 'p1',
     name: '星曜Pro 智能手机 256G',
@@ -463,7 +464,7 @@ const products = [
     channel: '商城',
     shop: 'Mira数码店',
   },
-]
+])
 
 const USE_REMOTE = false
 
@@ -485,7 +486,7 @@ onMounted(async () => {
       page: pagination.current,
       pageSize: pagination.pageSize,
     })
-    products.splice(0, products.length, ...res.list)
+    products.value = res.list as typeof products.value
   } catch (error) {
     message.error('商品列表加载失败，请检查接口配置')
   }
@@ -499,7 +500,7 @@ const warningColumns = [
 ]
 
 const warningList = computed(() => {
-  return products
+  return products.value
     .filter((item) => item.stock <= warningThreshold.value)
     .map((item) => ({
       key: item.key,
@@ -557,6 +558,12 @@ const getProductPrimaryActions = (record: { status: string }) =>
 const getProductMoreActions = (record: { status: string }) =>
   getProductActions(record).filter(isActionAllowed).slice(2)
 
+const getProductMoreMenuItems = (record: { status: string }) =>
+  getProductMoreActions(record).map((action) => ({
+    key: action.key,
+    label: action.label,
+  }))
+
 const rangeValue = computed({
   get: () => {
     if (filters.dateRange.length === 2) {
@@ -577,7 +584,7 @@ const rangeValue = computed({
 })
 
 const filteredProducts = computed(() => {
-  return products.filter((item) => {
+  return products.value.filter((item) => {
     const matchName = !filters.name || item.name.includes(filters.name)
     const matchCode = !filters.code || item.code.includes(filters.code)
     const matchCategory = !filters.category || item.category === filters.category
@@ -616,6 +623,75 @@ const pagedProducts = computed(() => {
   const start = (pagination.current - 1) * pagination.pageSize
   return filteredProducts.value.slice(start, start + pagination.pageSize)
 })
+
+const selectedRowKeys = ref<string[]>([])
+const selectedRows = ref<any[]>([])
+
+const rowSelection = computed(() => ({
+  selectedRowKeys: selectedRowKeys.value,
+  onChange: (keys: string[], rows: any[]) => {
+    selectedRowKeys.value = keys
+    selectedRows.value = rows
+  },
+}))
+
+type BatchType = 'up' | 'down' | 'stock' | 'delete'
+
+const runBatchAction = (type: BatchType) => {
+  if (viewMode.value !== 'table') {
+    message.warning('请切换到表格并选择商品')
+    return
+  }
+  if (selectedRowKeys.value.length === 0) {
+    message.warning('请先选择商品')
+    return
+  }
+  const actionLabel =
+    type === 'up' ? '上架' : type === 'down' ? '下架' : type === 'stock' ? '增加库存' : '删除'
+  const prev = products.value.map((item) => ({ ...item }))
+  Modal.confirm({
+    title: `确认批量${actionLabel}`,
+    content: `将对 ${selectedRowKeys.value.length} 个商品执行“${actionLabel}”操作`,
+    okText: '确认',
+    cancelText: '取消',
+    onOk: () => {
+      const selectedSet = new Set(selectedRowKeys.value)
+      if (type === 'delete') {
+        products.value = products.value.filter((item) => !selectedSet.has(item.key))
+      } else if (type === 'stock') {
+        products.value = products.value.map((item) =>
+          selectedSet.has(item.key) ? { ...item, stock: item.stock + 10 } : item
+        )
+      } else {
+        products.value = products.value.map((item) =>
+          selectedSet.has(item.key)
+            ? { ...item, status: type === 'up' ? '上架中' : '已下架' }
+            : item
+        )
+      }
+      notification.open({
+        message: `已批量${actionLabel}`,
+        description: `已处理 ${selectedRowKeys.value.length} 个商品`,
+        btn: () =>
+          h(
+            'a-button',
+            {
+              type: 'link',
+              onClick: () => {
+                products.value = prev
+                selectedRowKeys.value = []
+                selectedRows.value = []
+                notification.destroy()
+              },
+            },
+            '撤销'
+          ),
+      })
+      selectedRowKeys.value = []
+      selectedRows.value = []
+    },
+  })
+}
 
 const resetFilters = () => {
   filters.name = ''

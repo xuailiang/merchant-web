@@ -9,9 +9,10 @@
           <div class="toolbar-meta">当前页面：活动页 · 草稿 · 上次保存 10:42</div>
         </div>
         <a-space>
+          <a-tag :color="dirty ? 'orange' : 'green'">{{ dirty ? '未保存' : '已保存' }}</a-tag>
           <a-button @click="showPreview = true">预览</a-button>
-          <a-button>保存草稿</a-button>
-          <a-button type="primary">发布上线</a-button>
+          <a-button @click="saveDraft">保存草稿</a-button>
+          <a-button type="primary" @click="publishPage">发布上线</a-button>
         </a-space>
       </div>
     </a-card>
@@ -468,9 +469,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import AssetPicker from '../components/AssetPicker.vue'
 import type { AssetItem } from '../mock/assets'
+import { message } from 'ant-design-vue'
+import { useDirtyGuard } from '../utils/useDirtyGuard'
 
 const createUpload = (url: string, name: string) => ({
   uid: `${Date.now()}-${name}`,
@@ -555,6 +558,33 @@ const pageConfig = reactive({
   floatingImageList: [createUpload('https://picsum.photos/120/120?random=13', 'float.png')],
 })
 
+const dirty = ref(false)
+const snapshot = ref('')
+
+const buildSnapshot = () =>
+  JSON.stringify({
+    blocks: JSON.parse(JSON.stringify(blocks)),
+    pageConfig: JSON.parse(JSON.stringify(pageConfig)),
+  })
+
+const markSaved = () => {
+  snapshot.value = buildSnapshot()
+  dirty.value = false
+}
+
+onMounted(() => {
+  markSaved()
+})
+
+watch(
+  () => buildSnapshot(),
+  (val) => {
+    dirty.value = val !== snapshot.value
+  }
+)
+
+useDirtyGuard(dirty, { message: '页面配置未保存，确认离开吗？' })
+
 const selectedId = ref<string | null>(blocks[0]?.id ?? null)
 const dragIndex = ref<number | null>(null)
 const draggingPalette = ref<{ type: string; title: string } | null>(null)
@@ -614,6 +644,16 @@ const removeBlock = (index: number) => {
   if (removed?.id === selectedId.value) {
     selectedId.value = blocks[0]?.id ?? null
   }
+}
+
+const saveDraft = () => {
+  message.success('草稿已保存')
+  markSaved()
+}
+
+const publishPage = () => {
+  message.success('页面已发布')
+  markSaved()
 }
 
 const selectBlock = (id: string) => {

@@ -13,6 +13,7 @@
         <div class="page-subtitle">完善商品信息，确保商品能够正常展示和销售</div>
       </div>
       <a-space>
+        <a-tag :color="dirty ? 'orange' : 'green'">{{ dirty ? '未保存' : '已保存' }}</a-tag>
         <a-button @click="saveDraft">保存草稿</a-button>
         <a-button type="primary" @click="submitProduct">保存并提交</a-button>
       </a-space>
@@ -404,6 +405,7 @@ import {
 } from '@ant-design/icons-vue'
 import AssetPicker from '../components/AssetPicker.vue'
 import type { AssetItem } from '../mock/assets'
+import { useDirtyGuard } from '../utils/useDirtyGuard'
 
 const form = reactive({
   name: '猫爬架四层大型豪华猫玩具',
@@ -492,13 +494,13 @@ const addAssets = (assets: AssetItem[]) => {
     const asset = assets[0]
     if (!asset) return
     if (assetPickerTarget.value === 'detail') {
-      detailVideo.cover = asset.cover
-      detailVideo.name = asset.name
-      detailVideo.url = asset.url
+      detailVideo.value.cover = asset.cover
+      detailVideo.value.name = asset.name
+      detailVideo.value.url = asset.url
     } else {
-      mainVideo.cover = asset.cover
-      mainVideo.name = asset.name
-      mainVideo.url = asset.url
+      mainVideo.value.cover = asset.cover
+      mainVideo.value.name = asset.name
+      mainVideo.value.url = asset.url
     }
     return
   }
@@ -605,6 +607,39 @@ const skus = ref([
   },
 ])
 
+const dirty = ref(false)
+const snapshot = ref('')
+
+const buildSnapshot = () =>
+  JSON.stringify({
+    form: { ...form },
+    images: imageList.value,
+    mainVideo: mainVideo.value,
+    detailVideo: detailVideo.value,
+    specGroups: JSON.parse(JSON.stringify(specGroups)),
+    batch: { ...batch },
+    skus: skus.value,
+    services: form.services,
+  })
+
+const markSaved = () => {
+  snapshot.value = buildSnapshot()
+  dirty.value = false
+}
+
+onMounted(() => {
+  markSaved()
+})
+
+watch(
+  () => buildSnapshot(),
+  (value) => {
+    dirty.value = value !== snapshot.value
+  }
+)
+
+useDirtyGuard(dirty, { message: '商品信息未保存，确认离开吗？' })
+
 const skuColumns = [
   { title: '图片', key: 'image', dataIndex: 'image', width: 80 },
   { title: '规格组合', key: 'combo', dataIndex: 'combo', width: 220 },
@@ -701,13 +736,6 @@ const logs = [
   },
 ]
 
-const logColumns = [
-  { title: '操作人', dataIndex: 'user', key: 'user' },
-  { title: '操作类型', dataIndex: 'action', key: 'action' },
-  { title: '操作时间', dataIndex: 'time', key: 'time' },
-  { title: '操作内容', dataIndex: 'detail', key: 'detail' },
-  { title: 'IP地址', dataIndex: 'ip', key: 'ip' },
-]
 
 const route = useRoute()
 const DRAFT_KEY = 'product-drafts'
@@ -772,6 +800,7 @@ const saveDraft = () => {
   localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts))
   draftId.value = id
   message.success('草稿已保存')
+  markSaved()
 }
 
 const validateRequired = () => {
@@ -800,6 +829,7 @@ const submitProduct = () => {
     return
   }
   message.success('商品已提交审核')
+  markSaved()
 }
 </script>
 

@@ -62,6 +62,7 @@
             <a-button v-if="hasPermission('orders:export')" type="primary" ghost @click="exportOrders('待发货')"
               >待发货导出</a-button
             >
+            <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
           </a-space>
         </div>
       </template>
@@ -113,6 +114,8 @@
         :pagination="{ pageSize: 8 }"
         :scroll="{ x: 1200 }"
         :row-class-name="rowClassName"
+        :loading="tableLoading"
+        :locale="{ emptyText: h(TableEmpty, { description: '暂无订单数据' }) }"
       >
         <template #expandedRowRender="{ record }">
           <div class="expand-panel">
@@ -180,15 +183,11 @@
                 <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(record)">{{ action.label }}</RouterLink>
                 <a-button v-else-if="isActionAllowed(action)" type="link">{{ action.label }}</a-button>
               </template>
-              <a-dropdown v-if="getOrderMoreActions(record).length > 0">
+              <a-dropdown
+                v-if="getOrderMoreActions(record).length > 0"
+                :menu="{ items: getOrderMoreMenuItems(record) }"
+              >
                 <a class="action-more" @click.prevent>更多</a>
-                <template #overlay>
-                  <a-menu>
-                    <a-menu-item v-for="action in getOrderMoreActions(record)" :key="action.key">
-                      {{ action.label }}
-                    </a-menu-item>
-                  </a-menu>
-                </template>
               </a-dropdown>
             </a-space>
           </template>
@@ -199,11 +198,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import { RouterLink, useRouter } from 'vue-router'
 import TableWrapper from '../components/TableWrapper.vue'
+import ColumnSetting from '../components/ColumnSetting.vue'
+import TableEmpty from '../components/TableEmpty.vue'
 import { useIsMobile } from '../utils/useIsMobile'
 import { usePersistedFilters } from '../utils/usePersistedFilters'
 import { hasPermission } from '../utils/permissions'
@@ -211,12 +212,13 @@ import { orderActionConfig, orderStatusActions, orderStatusConfig, type ActionDe
 import { message } from 'ant-design-vue'
 import { fetchOrders } from '../api/endpoints'
 import { createExportTask } from '../utils/exports'
+import { useColumnConfig } from '../utils/columnConfig'
 
 dayjs.extend(isBetween)
 const isMobile = useIsMobile()
 const router = useRouter()
 
-const columns = [
+const allColumns = [
   { title: '商品信息', key: 'product', width: 300 },
   { title: '订单编号', dataIndex: 'id', key: 'id', width: 180 },
   { title: '订单状态', dataIndex: 'status', key: 'status', width: 120 },
@@ -225,6 +227,9 @@ const columns = [
   { title: '下单时间', dataIndex: 'orderTime', key: 'orderTime', width: 160 },
   { title: '操作', key: 'action', fixed: 'right', width: 160 },
 ]
+
+const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:orders', allColumns)
+const tableLoading = ref(false)
 
 const orders = [
   {
@@ -683,6 +688,12 @@ const getOrderPrimaryActions = (record: { status: string }) =>
 
 const getOrderMoreActions = (record: { status: string }) =>
   getOrderActions(record).filter(isActionAllowed).slice(2)
+
+const getOrderMoreMenuItems = (record: { status: string }) =>
+  getOrderMoreActions(record).map((action) => ({
+    key: action.key,
+    label: action.label,
+  }))
 
 const resetFilters = () => {
   filters.orderId = ''

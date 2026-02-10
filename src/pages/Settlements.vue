@@ -25,6 +25,7 @@
           <a-button type="primary">查询</a-button>
           <a-button @click="resetPayment">重置</a-button>
           <a-button>导出</a-button>
+          <ColumnSetting :columns="paymentAllColumns" v-model="paymentVisible" @reset="resetPaymentColumns" />
         </a-space>
       </a-form>
 
@@ -43,6 +44,7 @@
           <a-button type="primary">查询</a-button>
           <a-button @click="resetDetail">重置</a-button>
           <a-button>导出</a-button>
+          <ColumnSetting :columns="detailAllColumns" v-model="detailVisible" @reset="resetDetailColumns" />
         </a-space>
       </a-form>
     </a-card>
@@ -54,6 +56,8 @@
         :data-source="filteredPayments"
         :pagination="{ pageSize: 8 }"
         :scroll="{ x: 1400 }"
+        :loading="tableLoading"
+        :locale="{ emptyText: h(TableEmpty, { description: '暂无结算数据' }) }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
@@ -75,6 +79,8 @@
         :data-source="filteredDetails"
         :pagination="{ pageSize: 8 }"
         :scroll="{ x: 1800 }"
+        :loading="tableLoading"
+        :locale="{ emptyText: h(TableEmpty, { description: '暂无明细数据' }) }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
@@ -94,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref } from 'vue'
 import dayjs from 'dayjs'
 import {
   settlementActionConfig,
@@ -104,6 +110,9 @@ import {
 } from '../utils/statusConfig'
 import { fetchSettlementDetails, fetchSettlementPayments } from '../api/endpoints'
 import { message } from 'ant-design-vue'
+import ColumnSetting from '../components/ColumnSetting.vue'
+import TableEmpty from '../components/TableEmpty.vue'
+import { useColumnConfig } from '../utils/columnConfig'
 
 const activeTab = ref('payment')
 
@@ -113,7 +122,7 @@ const settleOptions = [
   { label: '未结算', value: '未结算' },
 ]
 
-const paymentColumns = [
+const paymentAllColumns = [
   { title: '序号', dataIndex: 'index', key: 'index', width: 70 },
   { title: '供货商名称(收款人名称)', dataIndex: 'supplier', key: 'supplier', width: 200 },
   { title: '打款金额(元)', dataIndex: 'amount', key: 'amount', width: 120 },
@@ -129,7 +138,7 @@ const paymentColumns = [
   { title: '操作', key: 'action', fixed: 'right', width: 120 },
 ]
 
-const detailColumns = [
+const detailAllColumns = [
   { title: '序号', dataIndex: 'index', key: 'index', width: 70 },
   { title: '资金方向', dataIndex: 'direction', key: 'direction', width: 120 },
   { title: '打款金额(元)', dataIndex: 'amount', key: 'amount', width: 120 },
@@ -151,6 +160,18 @@ const detailColumns = [
   { title: '结算状态', dataIndex: 'status', key: 'status', width: 120 },
   { title: '操作', key: 'action', fixed: 'right', width: 120 },
 ]
+
+const { visibleKeys: paymentVisible, filteredColumns: paymentColumns, reset: resetPaymentColumns } = useColumnConfig(
+  'columns:settlements:payment',
+  paymentAllColumns
+)
+
+const { visibleKeys: detailVisible, filteredColumns: detailColumns, reset: resetDetailColumns } = useColumnConfig(
+  'columns:settlements:detail',
+  detailAllColumns
+)
+
+const tableLoading = ref(false)
 
 const paymentData = [
   {
