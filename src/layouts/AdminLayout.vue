@@ -57,19 +57,25 @@
               <a-switch v-model:checked="isDark" checked-children="暗" un-checked-children="亮" />
             </a-space>
 
-            <a-dropdown
-              :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
-              :menu="{ items: inboxMenuItems, onClick: onInboxMenuClick }"
-            >
+            <a-dropdown :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
               <a-badge :count="unreadCount" :offset="[4, -2]">
                 <BellOutlined class="header-icon" />
               </a-badge>
+              <template #overlay>
+                <a-menu>
+                  <a-menu-item v-for="item in inboxPreview" :key="item.id" @click="openMessage(item)">
+                    <div class="notice-item">
+                      <div class="notice-title">{{ item.title }}</div>
+                      <div class="notice-desc">{{ item.desc }}</div>
+                    </div>
+                  </a-menu-item>
+                  <a-menu-divider />
+                  <a-menu-item @click="openInbox = true">查看全部站内信</a-menu-item>
+                </a-menu>
+              </template>
             </a-dropdown>
 
-            <a-dropdown
-              :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
-              :menu="{ items: userMenuItems, onClick: onUserMenuClick }"
-            >
+            <a-dropdown :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
               <a-space class="user-entry">
                 <a-avatar size="small" class="header-avatar">店</a-avatar>
                 <div class="header-user">
@@ -78,6 +84,15 @@
                 </div>
                 <DownOutlined class="user-caret" />
               </a-space>
+              <template #overlay>
+                <a-menu>
+                <a-menu-item @click="router.push('/account/settings')">账户设置</a-menu-item>
+                <a-menu-item @click="router.push('/account/store')">门店信息</a-menu-item>
+                <a-menu-item @click="router.push('/help')">帮助中心</a-menu-item>
+                  <a-menu-divider />
+                  <a-menu-item @click="onLogout">退出登录</a-menu-item>
+                </a-menu>
+              </template>
             </a-dropdown>
           </a-space>
         </div>

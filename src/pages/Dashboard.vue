@@ -1,15 +1,57 @@
 <template>
-  <div>
-    <div class="page-title">仪表盘</div>
+  <div class="dashboard-page">
+    <section class="dashboard-hero">
+      <div class="hero-copy">
+        <div class="hero-kicker">经营驾驶舱</div>
+        <div class="page-title">仪表盘</div>
+        <div class="hero-subtitle">聚合订单、库存与渠道数据，聚焦关键指标与经营节奏。</div>
+        <div class="hero-actions">
+          <a-button type="primary" class="hero-primary">生成周报</a-button>
+          <a-button class="hero-ghost">下载中心</a-button>
+        </div>
+        <div class="hero-tags">
+          <span>导出队列可追踪</span>
+          <span>库存预警实时提示</span>
+          <span>渠道对比一键查看</span>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="hero-card-title">核心指标速览</div>
+        <div class="hero-card-grid">
+          <div v-for="item in overviewStats.slice(0, 3)" :key="item.title" class="hero-stat">
+            <div class="hero-stat-title">{{ item.title }}</div>
+            <div class="hero-stat-value">{{ item.value }}</div>
+            <div class="hero-stat-meta">
+              <span :class="item.trend >= 0 ? 'rise' : 'drop'">
+                {{ item.trend >= 0 ? '+' : '' }}{{ item.trend }}%
+              </span>
+              <span>{{ item.note }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-divider"></div>
+        <div class="hero-mini">
+          <div>
+            <div class="mini-label">今日订单效率</div>
+            <div class="mini-value">96.2%</div>
+          </div>
+          <div>
+            <div class="mini-label">库存健康度</div>
+            <div class="mini-value">良好</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <a-row :gutter="16" class="card-section">
+    <a-row :gutter="16" class="card-section metric-grid">
       <a-col v-for="item in overviewStats" :key="item.title" :xs="24" :sm="12" :lg="8" :xl="4">
-        <a-card>
-          <a-statistic :title="item.title" :value="item.value" />
+        <a-card class="stat-card">
+          <div class="stat-title">{{ item.title }}</div>
+          <div class="stat-value">{{ item.value }}</div>
           <div class="stat-meta">
-            <a-tag :color="item.trend >= 0 ? 'green' : 'red'">
+            <span :class="item.trend >= 0 ? 'rise' : 'drop'">
               {{ item.trend >= 0 ? '+' : '' }}{{ item.trend }}%
-            </a-tag>
+            </span>
             <span class="stat-note">{{ item.note }}</span>
           </div>
         </a-card>
@@ -18,11 +60,11 @@
 
     <a-row :gutter="16" class="card-section">
       <a-col :xs="24" :lg="16">
-        <a-card title="销售目标进度">
+        <a-card title="销售目标进度" class="panel-card panel-card--progress">
           <div class="progress-group">
             <div v-for="item in salesProgress" :key="item.label" class="progress-item">
               <div class="progress-label">{{ item.label }}</div>
-              <a-progress :percent="item.percent" :stroke-color="item.percent > 60 ? '#52c41a' : '#1677ff'" />
+              <a-progress :percent="item.percent" :stroke-color="item.percent > 60 ? '#10b981' : '#2563eb'" />
             </div>
           </div>
           <div class="status-block">
@@ -36,7 +78,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :lg="8">
-        <a-card title="运营提醒">
+        <a-card title="运营提醒" class="panel-card panel-card--alerts">
           <a-list :data-source="alerts" size="small">
             <template #renderItem="{ item }">
               <a-list-item>
@@ -50,18 +92,18 @@
 
     <a-row :gutter="16" class="card-section">
       <a-col :xs="24" :lg="12">
-        <a-card title="近 7 日成交趋势">
+        <a-card title="近 7 日成交趋势" class="panel-card panel-card--chart">
           <div ref="lineContainer" class="chart-box"></div>
         </a-card>
       </a-col>
       <a-col :xs="24" :lg="12">
-        <a-card title="品类销售分布">
+        <a-card title="品类销售分布" class="panel-card panel-card--chart">
           <div ref="columnContainer" class="chart-box"></div>
         </a-card>
       </a-col>
     </a-row>
 
-    <a-card class="card-section" title="周期报表">
+    <a-card class="card-section report-panel panel-card">
       <div class="report-toolbar">
         <a-space>
           <a-range-picker v-model:value="reportRange" :get-popup-container="getPopupContainer" />
@@ -74,35 +116,35 @@
       </div>
       <a-row :gutter="16" class="report-grid">
         <a-col :xs="24" :lg="6">
-          <a-card class="report-card">
+          <a-card class="report-card" @click="openReport('orders')">
             <div class="report-title">订单报表</div>
             <div class="report-value">12,840</div>
             <div class="report-meta">退单率 2.1%</div>
-            <a-button type="link" @click="openReport('orders')">查看明细</a-button>
+            <div class="report-link">查看明细</div>
           </a-card>
         </a-col>
         <a-col :xs="24" :lg="6">
-          <a-card class="report-card">
+          <a-card class="report-card" @click="openReport('profit')">
             <div class="report-title">利润报表</div>
             <div class="report-value">¥1,284,000</div>
             <div class="report-meta">毛利率 26.4%</div>
-            <a-button type="link" @click="openReport('profit')">查看明细</a-button>
+            <div class="report-link">查看明细</div>
           </a-card>
         </a-col>
         <a-col :xs="24" :lg="6">
-          <a-card class="report-card">
+          <a-card class="report-card" @click="openReport('inventory')">
             <div class="report-title">库存周转</div>
             <div class="report-value">18.6 天</div>
             <div class="report-meta">滞销 SKU 42</div>
-            <a-button type="link" @click="openReport('inventory')">查看明细</a-button>
+            <div class="report-link">查看明细</div>
           </a-card>
         </a-col>
         <a-col :xs="24" :lg="6">
-          <a-card class="report-card">
+          <a-card class="report-card" @click="openReport('channel')">
             <div class="report-title">渠道对比</div>
             <div class="report-value">抖音 38%</div>
             <div class="report-meta">Top: 自有小程序</div>
-            <a-button type="link" @click="openReport('channel')">查看明细</a-button>
+            <div class="report-link">查看明细</div>
           </a-card>
         </a-col>
       </a-row>
@@ -110,25 +152,25 @@
 
     <a-row :gutter="16" class="card-section">
       <a-col :xs="24" :lg="8">
-        <a-card title="订单周期报表">
+        <a-card title="订单周期报表" class="panel-card panel-card--mini-chart">
           <div ref="orderReportContainer" class="chart-box"></div>
         </a-card>
       </a-col>
       <a-col :xs="24" :lg="8">
-        <a-card title="利润趋势">
+        <a-card title="利润趋势" class="panel-card panel-card--mini-chart">
           <div ref="profitReportContainer" class="chart-box"></div>
         </a-card>
       </a-col>
       <a-col :xs="24" :lg="8">
-        <a-card title="渠道对比">
+        <a-card title="渠道对比" class="panel-card panel-card--mini-chart">
           <div ref="channelReportContainer" class="chart-box"></div>
         </a-card>
       </a-col>
     </a-row>
 
-    <a-row :gutter="16">
+    <a-row :gutter="16" class="card-section">
       <a-col :xs="24" :lg="16">
-        <a-card title="热销商品">
+        <a-card title="热销商品" class="panel-card panel-card--table">
           <template v-if="isMobile">
             <a-list :data-source="hotProducts">
               <template #renderItem="{ item }">
@@ -165,7 +207,7 @@
         </a-card>
       </a-col>
       <a-col :xs="24" :lg="8">
-        <a-card title="最新订单">
+        <a-card title="最新订单" class="panel-card panel-card--list">
           <a-list :data-source="latestOrders">
             <template #renderItem="{ item }">
               <a-list-item>
@@ -271,9 +313,9 @@ onMounted(() => {
       yField: 'value',
       smooth: true,
       height: 260,
-      color: '#1677ff',
+      color: '#2563eb',
       point: { size: 4, shape: 'circle' },
-      area: { style: { fill: 'l(90) 0:#ffffff 1:#e6f4ff' } },
+      area: { style: { fill: 'l(90) 0:#f8fafc 1:#dbeafe' } },
     })
     linePlot.render()
   }
@@ -283,7 +325,7 @@ onMounted(() => {
       xField: 'category',
       yField: 'value',
       height: 260,
-      color: '#52c41a',
+      color: '#f59e0b',
       columnWidthRatio: 0.5,
     })
     columnPlot.render()
@@ -294,7 +336,7 @@ onMounted(() => {
       xField: 'period',
       yField: 'value',
       height: 220,
-      color: '#1677ff',
+      color: '#2563eb',
       columnWidthRatio: 0.5,
     })
     orderPlot.render()
@@ -305,7 +347,7 @@ onMounted(() => {
       xField: 'period',
       yField: 'value',
       height: 220,
-      color: '#fa8c16',
+      color: '#10b981',
       point: { size: 4, shape: 'circle' },
     })
     profitPlot.render()
@@ -316,7 +358,7 @@ onMounted(() => {
       xField: 'channel',
       yField: 'value',
       height: 220,
-      color: '#722ed1',
+      color: '#7c3aed',
       columnWidthRatio: 0.6,
     })
     channelPlot.render()
@@ -430,16 +472,251 @@ const productColumns = [
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Source+Sans+3:wght@400;500;600&display=swap');
+
+.dashboard-page {
+  --ink: #0f172a;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-warm: #f59e0b;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --muted: #94a3b8;
+  --border: #e2e8f0;
+  font-family: 'Source Sans 3', "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--ink);
+}
+
+.dashboard-page :deep(.ant-card) {
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  background: var(--surface);
+}
+
+.dashboard-page :deep(.ant-card-head) {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.dashboard-page :deep(.ant-card-head-title) {
+  font-family: 'Fraunces', serif;
+  letter-spacing: 0.3px;
+}
+
+.dashboard-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 24px;
+  padding: 28px 28px 24px;
+  background: linear-gradient(135deg, #f9f5ec 0%, #eef2ff 55%, #f8fafc 100%);
+  border-radius: 24px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-kicker {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(28px, 3.2vw, 40px);
+  font-weight: 700;
+}
+
+.hero-subtitle {
+  color: #475569;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hero-primary {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.hero-ghost {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  color: #1d4ed8;
+}
+
+.hero-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-tags span {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #1e3a8a;
+  font-size: 12px;
+}
+
+.hero-card {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.12);
+}
+
+.hero-card-title {
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.hero-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-stat {
+  background: rgba(30, 41, 59, 0.6);
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.hero-stat-title {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.7);
+  margin-bottom: 6px;
+}
+
+.hero-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f8fafc;
+  margin-bottom: 6px;
+}
+
+.hero-stat-meta {
+  font-size: 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.hero-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.hero-mini {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mini-label {
+  font-size: 12px;
+  color: rgba(226, 232, 240, 0.6);
+}
+
+.mini-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.card-section {
+  margin-bottom: 20px;
+}
+
+.metric-grid .stat-card {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+.stat-title {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
 .stat-meta {
-  margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 12px;
 }
 
 .stat-note {
-  color: #8c8c8c;
-  font-size: 12px;
+  color: #64748b;
+}
+
+.rise {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.drop {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.panel-card :deep(.ant-card-body) {
+  background: #fff;
+}
+
+.panel-card--progress {
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.panel-card--alerts :deep(.ant-alert) {
+  border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.panel-card--alerts :deep(.ant-alert-message) {
+  font-weight: 600;
+  color: #92400e;
+}
+
+.panel-card--chart {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.panel-card--chart .chart-box {
+  padding: 6px 0 8px;
 }
 
 .progress-group {
@@ -455,11 +732,12 @@ const productColumns = [
 }
 
 .progress-label {
-  font-weight: 500;
+  font-weight: 600;
+  color: #1e293b;
 }
 
 .status-block {
-  margin-top: 24px;
+  margin-top: 22px;
 }
 
 .status-title {
@@ -473,27 +751,26 @@ const productColumns = [
   gap: 8px;
 }
 
-.order-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.order-amount {
-  font-weight: 600;
+.status-tags :deep(.ant-tag) {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  padding: 2px 10px;
 }
 
 .chart-box {
   height: 260px;
 }
 
-.report-detail-toolbar {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
+.report-panel {
+  background: linear-gradient(135deg, #f8fafc 0%, #fdf4ff 100%);
+}
+
+.report-panel :deep(.ant-card-head) {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.report-panel :deep(.ant-card-body) {
+  background: transparent;
 }
 
 .report-toolbar {
@@ -505,8 +782,15 @@ const productColumns = [
 }
 
 .report-grid .report-card {
-  background: #f8fafc;
-  border: 1px solid var(--border-color);
+  background: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-grid .report-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 28px rgba(15, 23, 42, 0.12);
 }
 
 .report-title {
@@ -522,23 +806,117 @@ const productColumns = [
 }
 
 .report-meta {
-  color: var(--text-secondary);
+  color: #64748b;
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.report-link {
+  font-size: 12px;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.panel-card--mini-chart {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.panel-card--mini-chart :deep(.ant-card-head) {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+.panel-card--mini-chart :deep(.ant-card-body) {
+  background: transparent;
+}
+
+.panel-card--mini-chart .chart-box {
+  height: 220px;
+}
+
+.panel-card--table :deep(.ant-table) {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.panel-card--table :deep(.ant-table-thead > tr > th) {
+  background: #f1f5f9;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.panel-card--table :deep(.ant-table-tbody > tr:hover > td) {
+  background: #f8fafc;
+}
+
+.panel-card--list :deep(.ant-list-item) {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.panel-card--list :deep(.ant-list-item:last-child) {
+  border-bottom: none;
+}
+
+.panel-card--list :deep(.ant-list-item-meta-title) {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.panel-card--list :deep(.ant-list-item-meta-description) {
+  color: #64748b;
+}
+
+.report-detail-toolbar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .mobile-card {
   margin-bottom: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .mobile-row {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  color: var(--text-primary);
+  color: #0f172a;
 }
 
 .mobile-label {
-  color: var(--text-secondary);
+  color: #64748b;
+}
+
+.order-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.order-amount {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+@media (max-width: 992px) {
+  .dashboard-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-mini {
+    flex-direction: column;
+    gap: 10px;
+  }
 }
 </style>
