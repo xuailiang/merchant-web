@@ -1,368 +1,78 @@
-# Merchant Web 项目文档
+# 商户 Web 项目文档
 
-## 📋 项目概览
+## 项目概述
 
-**项目名称**: Merchant Web（商户管理系统前端）  
-**项目描述**: AI 生成的纯前端项目，基于 Ant Design + Vue 3 构建的商户管理应用  
-**开发者**: xuailiang  
-**创建时间**: 2026年2月9日  
-**仓库状态**: 私有仓库  
-**主要语言**: Vue 3 + TypeScript
+这个商户 Web 项目是为了帮助商户在线管理他们的业务，并提供丰富的用户体验。
 
----
+## 技术栈
 
-## 🎯 项目目的
+- 前端: Vue.js
+- 后端: Node.js
+- 数据库: PostgreSQL
+- 其他: Docker, Nginx
 
-本项目是一个商户端管理系统的前端应用，提供商户进行日常业务管理、数据查看和操作的用户界面。通过 AI 生成的方式创建初始项目框架，采用现代化的前端技术栈实现高效、美观的用户体验。
-
----
-
-## 🛠️ 技术栈
-
-### 核心框架
-
-| 技术           | 版本    | 说明                                     |
-| -------------- | ------- | ---------------------------------------- |
-| **Vue**        | ^3.4.38 | 进行式的JavaScript框架，用于构建用户界面 |
-| **Vue Router** | ^4.4.0  | Vue应用的官方路由库                      |
-| **TypeScript** | ^5.5.4  | 为JavaScript添加类型支持                 |
-
-### UI组件库
-
-| 技术                     | 版本   | 说明                                      |
-| ------------------------ | ------ | ----------------------------------------- |
-| **Ant Design Vue**       | ^4.2.6 | Ant Design在Vue中的实现，提供丰富的UI组件 |
-| **Ant Design Icons Vue** | ^7.0.1 | Ant Design图标库Vue版本                   |
-
-### 数据可视化
-
-| 技术             | 版本    | 说明                                 |
-| ---------------- | ------- | ------------------------------------ |
-| **@antv/g2plot** | ^2.4.31 | 蚂蚁集团开源的图表库，用于数据可视化 |
-
-### 工具库
-
-| 技术      | 版本     | 说明                              |
-| --------- | -------- | --------------------------------- |
-| **dayjs** | ^1.11.11 | 轻量级的日期时间处理库            |
-| **xlsx**  | ^0.18.5  | Excel文件读写库，支持导入导出功能 |
-
-### 构建工具
-
-| 技术                   | 版本    | 说明                                 |
-| ---------------------- | ------- | ------------------------------------ |
-| **Vite**               | ^5.4.1  | 新一代前端构建工具，提供极速开发体验 |
-| **@vitejs/plugin-vue** | ^5.1.2  | Vite官方Vue 3插件                    |
-| **vue-tsc**            | ^2.0.29 | Vue文件的TypeScript类型检查工具      |
-
----
-
-## 📁 项目结构
+## 项目结构
 
 ```
 merchant-web/
-├── src/                      # 源代码目录
-│   ├── components/          # 可复用组件
-│   ├── views/              # 页面组件
-│   ├── router/             # 路由配置
-│   ├── stores/             # 状态管理（Pinia）
-│   ├── api/                # API请求模块
-│   ├── utils/              # 工具函数
-│   ├── types/              # TypeScript类型定义
-│   ├── App.vue             # 根组件
-│   └── main.ts             # 应用入口文件
-├── public/                  # 静态资源
-│   ├── favicon.ico
-│   └── 其他静态文件
-├── docs/                    # 项目文档
-├── index.html              # HTML入口文件
-├── package.json            # 项目配置文件
-├── package-lock.json       # 依赖锁定文件
-├── vite.config.ts          # Vite配置文件
-├── tsconfig.json           # TypeScript配置文件
-├── tsconfig.node.json      # Node相关的TypeScript配置
-└── .gitignore              # Git忽略文件
-
+├── src/
+│   ├── components/
+│   ├── views/
+│   ├── router/
+│   └── store/
+├── public/
+└── README.md
 ```
 
----
+## 快速开始指南
 
-## ⚙️ 配置文件说明
+1. 克隆项目:
+   ```bash
+   git clone https://github.com/xuailiang/merchant-web.git
+   cd merchant-web
+   ```
+2. 安装依赖:
+   ```bash
+   npm install
+   ```
+3. 启动开发服务器:
+   ```bash
+   npm run serve
+   ```
 
-### package.json
+## 开发规范
 
-当前项目依赖配置包括：
+- 遵循 ESLint 标准
+- 每个组件应有对应的测试
 
-- **生产依赖**: Vue 3、Ant Design Vue、图表库、数据处理库
-- **开发依赖**: Vite、TypeScript、Vue插件等
+## 常见问题解答 (FAQ)
 
-### tsconfig.json
+1. 如何更改配置？
+   编辑 `config.js` 文件。
 
-配置TypeScript编译器选项：
+## 部署指南
 
-- 目标: ES2020
-- 启用严格模式检查
-- 检查未使用的变量和参数
-- 禁止Switch的fall-through
+- 使用 Docker 进行部署:
+  ```bash
+  docker-compose up -d
+  ```
 
----
+## 功能进度
 
-## 🚀 快速开始
+- [x] 用户登录
+- [ ] 收益分析
+- [ ] 报表生成
 
-### 前置要求
+## 贡献指南
 
-- Node.js >= 16.0.0
-- npm >= 8.0.0 或 yarn / pnpm
+欢迎大家为本项目贡献，提交 Pull Request 或报告问题！
 
-### 安装依赖
+## 项目统计
 
-```bash
-npm install
-```
+- 当前贡献者: 5
+- 关闭的问题: 20
+- 开放的 Pull Request: 3
 
-### 开发环境运行
+## 更新日期
 
-```bash
-npm run dev
-```
-
-应用将在 `http://localhost:5173` 运行。
-
-### 代码质量命令
-
-```bash
-# 类型检查
-npm run typecheck
-
-# ESLint（严格，0 warning）
-npm run lint
-
-# 自动修复 lint
-npm run lint:fix
-
-# 统一格式化
-npm run format
-```
-
-### 提交前校验（Husky + lint-staged）
-
-- 已启用 `pre-commit` 钩子。
-- 提交时会自动执行：
-  - `prettier --write`（仅暂存文件）
-  - `eslint --fix --max-warnings=0`（仅 ts/vue 暂存文件）
-
-如需重新初始化 Husky：
-
-```bash
-npm run prepare
-```
-
-### Mock 联调（MSW）
-
-项目支持在无后端时启用浏览器侧接口模拟。
-
-1. 设置环境变量：
-
-```bash
-VITE_USE_MSW=true
-```
-
-2. 启动开发服务：
-
-```bash
-npm run dev
-```
-
-3. 关闭 Mock：
-
-```bash
-VITE_USE_MSW=false
-```
-
-Mock 覆盖模块：
-
-- 登录认证（`/auth/*`）
-- 订单与售后（`/orders`、`/after-sales`）
-- 商品列表（`/products`）
-- 结算列表与明细（`/settlements/*`）
-- 发货与营销示例接口
-
-常见问题：
-
-- 首次启用 Mock 时若无响应，确认 `public/mockServiceWorker.js` 存在。
-- 若需直连真实后端，请将 `VITE_USE_MSW` 设为 `false` 并配置 `VITE_API_BASE_URL`。
-
-**开发特性:**
-
-- 热模块更新 (HMR)
-- 实时TypeScript类型检查
-- 快速的编译和刷新
-
-### 生产构建
-
-```bash
-npm run build
-```
-
-### 预览生产构建
-
-```bash
-npm run preview
-```
-
----
-
-## 📚 核心依赖详解
-
-### Ant Design Vue
-
-企业级UI库，提供50+高质量组件：
-
-- 布局、菜单、表格
-- 表单、输入框、选择框
-- 模态框、抽屉、气泡卡片
-- 日期选择、时间选择、级联选择
-
-### Vue Router
-
-单页应用路由库：
-
-- 动态路由匹配
-- 嵌套路由
-- 路由懒加载
-- 导��守卫
-
-### @antv/g2plot
-
-图表库，支持：
-
-- 折线图、柱状图
-- 散点图、热力图
-- 仪表盘、漏斗图
-
-### xlsx
-
-Excel处理库：
-
-- 读取/生成Excel文件
-- 数据导入导出
-- 格式处理
-
-### dayjs
-
-日期时间处理：
-
-- 日期格式化
-- 日期计算
-- 国际化支持
-
----
-
-## 📝 开发规范
-
-### TypeScript使用
-
-- ✅ 启用严格模式
-- ✅ 检查未使用的变量
-- ✅ 为函数添加类型注解
-- ✅ 为对象属性添加类型定义
-
-### 代码风格
-
-- 使用TypeScript进行类型检查
-- 遵循Vue 3 Composition API最佳实践
-- 组件使用单文件组件格式 (.vue)
-- 正确处理模块导入
-
----
-
-## 🔧 常见问题
-
-### Q: 如何添加新的页面？
-
-A: 在 `src/views` 目录创建新的Vue文件，然后在路由文件中注册。
-
-### Q: 如何使用Ant Design组件？
-
-A: 直接从 `ant-design-vue` 导入所需组件。
-
-### Q: 如何处理日期？
-
-A: 使用 dayjs 库进行日期处理。
-
-### Q: 如何导出Excel文件？
-
-A: 使用 xlsx 库创建和导出Excel文件。
-
----
-
-## 📦 部署指南
-
-### 构建优化
-
-1. 运行 `npm run build` 生成生产版本
-2. 分析构建产物大小
-3. 配置CDN加速静态资源
-4. 启用gzip压缩
-
-### 部署步骤
-
-```bash
-# 1. 构建
-npm run build
-
-# 2. 上传dist文件夹到服务器
-# 3. 配置Web服务器（nginx/apache）
-# 4. 配置反向代理
-# 5. 测试验证
-```
-
----
-
-## 🤝 贡献指南
-
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
----
-
-## 📊 项目统计
-
-| 指标        | 数值         |
-| ----------- | ------------ |
-| 仓库大小    | 1.9 MB       |
-| Stars       | 0            |
-| Forks       | 0            |
-| Open Issues | 0            |
-| 最后更新    | 2026年2月9日 |
-
----
-
-## ✨ 特色功能（计划）
-
-- [ ] 商户账户管理
-- [ ] 订单管理系统
-- [ ] 数据分析仪表板
-- [ ] 财务报表统计
-- [ ] 商品库存管理
-- [ ] 客户关系管理(CRM)
-- [ ] 权限控制系统
-- [ ] 实时通知提醒
-
----
-
-## 📚 推荐学习资源
-
-- [Vue 3官方文档](https://vuejs.org/)
-- [Vite官方文档](https://vitejs.dev/)
-- [Ant Design Vue文档](https://www.antdv.com/)
-- [Vue Router文档](https://router.vuejs.org/)
-- [TypeScript文档](https://www.typescriptlang.org/)
-
----
-
-**最后更新**: 2026年2月9日  
-**版本**: 0.0.0（初始版本）
+最后更新时间: 2026-02-26 03:30:07 UTC
