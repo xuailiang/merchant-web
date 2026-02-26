@@ -1,78 +1,72 @@
-# 商户 Web 项目文档
+# 项目概述
+这是一个针对电子商务平台的项目，旨在为商家提供便捷的在线交易解决方案。
 
-## 项目概述
+# 技术栈
+- **前端**: React, Redux
+- **后端**: Node.js, Express
+- **数据库**: MongoDB
 
-这个商户 Web 项目是为了帮助商户在线管理他们的业务，并提供丰富的用户体验。
-
-## 技术栈
-
-- 前端: Vue.js
-- 后端: Node.js
-- 数据库: PostgreSQL
-- 其他: Docker, Nginx
-
-## 项目结构
-
+# 项目结构
 ```
-merchant-web/
-├── src/
-│   ├── components/
-│   ├── views/
-│   ├── router/
-│   └── store/
-├── public/
-└── README.md
+merchant-web
+├── src
+│   ├── components  // 组件
+│   ├── pages  // 页面
+│   ├── utils  // 工具
+│   └── styles  // 样式
+├── public  // 静态文件
+└── package.json  // 项目依赖
+```
+详细解释：
+- **components**: 复用组件
+- **pages**: 页面级组件
+- **utils**: 工具函数
+- **styles**: 样式文件
+
+# 快速开始
+1. 克隆项目：`git clone https://github.com/xuailiang/merchant-web.git`
+2. 进入项目目录：`cd merchant-web`
+3. 安装依赖：`npm install`
+4. 启动项目：`npm start`
+
+# 开发标准
+- 所有代码必须经过 ESLint 检查。
+- 提交信息要清晰，包含相关的价值。
+
+# 核心依赖说明
+- **Express**: 用于构建 Web 应用的框架。
+- **Mongoose**: MongoDB 的 ODM 库。
+
+# 常见问题与代码示例
+**Q: 如何添加新的路由？**  
+**A:** 在 `src/routes` 中创建新的路由文件，并在 `index.js` 中引入。  
+```javascript
+const newRoute = require('./newRoute');
+app.use('/new', newRoute);
 ```
 
-## 快速开始指南
+# 部署指南
+支持以下平台：
+- **Heroku**: 利用 `heroku deploy` 部署。
+- **Docker**: 使用 Dockerfile 构建镜像。
 
-1. 克隆项目:
-   ```bash
-   git clone https://github.com/xuailiang/merchant-web.git
-   cd merchant-web
-   ```
-2. 安装依赖:
-   ```bash
-   npm install
-   ```
-3. 启动开发服务器:
-   ```bash
-   npm run serve
-   ```
-
-## 开发规范
-
-- 遵循 ESLint 标准
-- 每个组件应有对应的测试
-
-## 常见问题解答 (FAQ)
-
-1. 如何更改配置？
-   编辑 `config.js` 文件。
-
-## 部署指南
-
-- 使用 Docker 进行部署:
-  ```bash
-  docker-compose up -d
-  ```
-
-## 功能进度
-
+# 功能开发进展
 - [x] 用户登录
-- [ ] 收益分析
-- [ ] 报表生成
+- [ ] 支付集成
+- [ ] 数据分析
 
-## 贡献指南
+# 贡献指南
+欢迎贡献！请遵循以下流程：
+1. Fork 本项目。
+2. 创建新分支：`git checkout -b my-feature`
+3. 提交更改��推送：`git push origin my-feature`
+4. 创建 Pull Request。
 
-欢迎大家为本项目贡献，提交 Pull Request 或报告问题！
+# 学习资源
+- [React 官方文档](https://reactjs.org/docs/getting-started.html)
+- [Node.js 官方文档](https://nodejs.org/en/docs/)
 
-## 项目统计
-
-- 当前贡献者: 5
-- 关闭的问题: 20
-- 开放的 Pull Request: 3
-
-## 更新日期
-
-最后更新时间: 2026-02-26 03:30:07 UTC
+# 项目统计
+- 总提交数: 120  
+- 参与者: 5  
+- 问题数: 20  
