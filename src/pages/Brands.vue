@@ -156,7 +156,7 @@
               list-type="picture-card"
               :file-list="form.trademarkFiles"
               :before-upload="preventUpload"
-              @remove="(file) => onRemoveFile(file, 'trademarkFiles')"
+              @remove="(file: any) => onRemoveFile(file, 'trademarkFiles')"
             >
               <div class="upload-card">
                 <div class="upload-plus">+</div>
@@ -186,7 +186,7 @@
                   list-type="picture-card"
                   :file-list="form.logoFiles"
                   :before-upload="preventUpload"
-                  @remove="(file) => onRemoveFile(file, 'logoFiles')"
+                  @remove="(file: any) => onRemoveFile(file, 'logoFiles')"
                 >
                   <div class="upload-card">
                     <div class="upload-plus">+</div>
@@ -231,7 +231,7 @@
               list-type="picture-card"
               :file-list="form.authFiles"
               :before-upload="preventUpload"
-              @remove="(file) => onRemoveFile(file, 'authFiles')"
+              @remove="(file: any) => onRemoveFile(file, 'authFiles')"
             >
               <div class="upload-card">
                 <div class="upload-plus">+</div>

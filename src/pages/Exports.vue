@@ -28,7 +28,7 @@
         :pagination="{ pageSize: 8 }"
         :row-class-name="rowClassName"
         row-key="id"
-        :custom-row="(record) => ({ 'data-export-id': record.id })"
+        :custom-row="(record: any) => ({ 'data-export-id': record.id })"
         :loading="tableLoading"
         :locale="{ emptyText: h(TableEmpty, { description: '暂无导出记录' }) }"
       >

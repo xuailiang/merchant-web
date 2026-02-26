@@ -349,7 +349,7 @@ onMounted(async () => {
       startDate: filters.dateRange[0],
       endDate: filters.dateRange[1],
     })
-    cases.splice(0, cases.length, ...res.list)
+    cases.splice(0, cases.length, ...(res.list as any[]))
   } catch (error) {
     message.error('售后列表加载失败，请检查接口配置')
   }
@@ -470,7 +470,7 @@ const onTabChange = () => {
 const getAfterSalesStatusMeta = (status: string) =>
   afterSalesStatusConfig[status] ?? { label: status, color: 'default' }
 
-const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission)
+const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission as any)
 
 const getAfterSalesActions = (record: { status: string }) => {
   const keys = afterSalesStatusActions[record.status] ?? ['view']

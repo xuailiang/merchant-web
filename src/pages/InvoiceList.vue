@@ -21,10 +21,10 @@
 
     <a-card>
       <a-table :columns="columns" :data-source="rows" :pagination="{ pageSize: 10 }" :scroll="{ x: 1500 }">
-        <template #bodyCell="{ column, record }">
+        <template #bodyCell="{ column }">
           <template v-if="column.key === 'action'">
             <a-space>
-              <a-button type="link" @click="openDetail(record)">查看结算明细</a-button>
+              <a-button type="link" @click="openDetail()">查看结算明细</a-button>
               <a-button type="link">上传发票</a-button>
             </a-space>
           </template>

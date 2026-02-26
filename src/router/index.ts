@@ -2,6 +2,10 @@ import { createRouter, createWebHistory } from 'vue-router'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import { getRole, getToken } from '../utils/auth'
 import type { UserRole } from '../utils/auth'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+
+NProgress.configure({ showSpinner: false })
 
 type RouteMeta = {
   title?: string
@@ -266,6 +270,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, _from, next) => {
+  NProgress.start()
   const meta = to.meta as RouteMeta
   if (!meta?.requiresAuth) {
     next()
@@ -288,6 +293,10 @@ router.beforeEach((to, _from, next) => {
   }
 
   next()
+})
+
+router.afterEach(() => {
+  NProgress.done()
 })
 
 export default router

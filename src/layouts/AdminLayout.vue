@@ -6,7 +6,7 @@
       width="240"
       :collapsedWidth="0"
       breakpoint="lg"
-      @breakpoint="(broken) => (collapsed = broken)"
+      @breakpoint="(broken: boolean) => (collapsed = broken)"
       class="layout-sider"
     >
       <div class="brand">
@@ -57,7 +57,7 @@
               <a-switch v-model:checked="isDark" checked-children="暗" un-checked-children="亮" />
             </a-space>
 
-            <a-dropdown :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
+            <a-dropdown :getPopupContainer="getPopupContainer">
               <a-badge :count="unreadCount" :offset="[4, -2]">
                 <BellOutlined class="header-icon" />
               </a-badge>
@@ -75,7 +75,7 @@
               </template>
             </a-dropdown>
 
-            <a-dropdown :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)">
+            <a-dropdown :getPopupContainer="getPopupContainer">
               <a-space class="user-entry">
                 <a-avatar size="small" class="header-avatar">店</a-avatar>
                 <div class="header-user">
@@ -120,7 +120,11 @@
       </div>
 
       <a-layout-content class="layout-content">
-        <RouterView />
+        <RouterView v-slot="{ Component, route }">
+          <keep-alive>
+            <component :is="Component" :key="route.fullPath" />
+          </keep-alive>
+        </RouterView>
       </a-layout-content>
     </a-layout>
   </a-layout>
@@ -170,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   DashboardOutlined,
@@ -190,8 +194,9 @@ import {
 import { clearAuth, getName, getRole } from '../utils/auth'
 import { setThemeMode, themeMode } from '../utils/theme'
 import { hasPermission } from '../utils/permissions'
-import { getInboxMessages, setInboxMessages, updateInboxMessages, type InboxItem } from '../utils/inbox'
+import { getInboxMessages, updateInboxMessages, type InboxItem } from '../utils/inbox'
 
+const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
 const collapsed = ref(false)
 const router = useRouter()
 const route = useRoute()
@@ -334,7 +339,7 @@ const filterMenu = (items: MenuNode[]): MenuNode[] => {
   return (items ?? [])
     .map((item) => {
       if (!item) return item
-      const canView = !item.perm || hasPermission(item.perm)
+      const canView = !item.perm || hasPermission(item.perm as any)
       if (!canView) return null
       if (item.children) {
         const children = filterMenu(item.children)
@@ -615,44 +620,7 @@ const syncInbox = () => {
 const unreadCount = computed(() => inboxMessages.value.filter((item) => item.unread).length)
 const inboxPreview = computed(() => inboxMessages.value.slice(0, 3))
 
-const inboxMenuItems = computed(() => [
-  ...inboxPreview.value.map((item) => ({
-    key: `msg-${item.id}`,
-    label: h('div', { class: 'notice-item' }, [
-      h('div', { class: 'notice-title' }, item.title),
-      h('div', { class: 'notice-desc' }, item.desc),
-    ]),
-  })),
-  { type: 'divider' },
-  { key: 'open-inbox', label: '查看全部站内信' },
-])
 
-const onInboxMenuClick = ({ key }: { key: string }) => {
-  if (key === 'open-inbox') {
-    openInbox.value = true
-    return
-  }
-  if (key.startsWith('msg-')) {
-    const id = key.replace('msg-', '')
-    const item = inboxMessages.value.find((msg) => msg.id === id)
-    if (item) openMessage(item)
-  }
-}
-
-const userMenuItems = [
-  { key: 'account-settings', label: '账户设置' },
-  { key: 'store-info', label: '门店信息' },
-  { key: 'help-center', label: '帮助中心' },
-  { type: 'divider' },
-  { key: 'logout', label: '退出登录' },
-]
-
-const onUserMenuClick = ({ key }: { key: string }) => {
-  if (key === 'account-settings') router.push('/account/settings')
-  if (key === 'store-info') router.push('/account/store')
-  if (key === 'help-center') router.push('/help')
-  if (key === 'logout') onLogout()
-}
 
 const filteredInbox = computed(() => {
   return inboxMessages.value.filter((item) => {

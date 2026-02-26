@@ -210,7 +210,7 @@ import { usePersistedFilters } from '../utils/usePersistedFilters'
 import { hasPermission } from '../utils/permissions'
 import { orderActionConfig, orderStatusActions, orderStatusConfig, type ActionDef } from '../utils/statusConfig'
 import { message } from 'ant-design-vue'
-import { fetchOrders } from '../api/endpoints'
+import { fetchOrders, type OrderItem } from '../api/endpoints'
 import { createExportTask } from '../utils/exports'
 import { useColumnConfig } from '../utils/columnConfig'
 
@@ -231,7 +231,39 @@ const allColumns = [
 const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:orders', allColumns)
 const tableLoading = ref(false)
 
-const orders = [
+type OrderLineItem = {
+  name: string
+  spec: string
+  spu: string
+  image: string
+  price: string
+  qty: number
+}
+
+type OrderRow = {
+  key: string
+  id: string
+  productName: string
+  productSku: string
+  spu: string
+  image: string
+  items?: OrderLineItem[]
+  orderTime: string
+  payTime: string
+  status: string
+  orderCode: string
+  quantity: number
+  unitPrice: string
+  paidAmount: string
+  payMethod: string
+  receiver: string
+  phone: string
+  note: string
+  settlement: string
+  afterSale: boolean
+}
+
+const orders: OrderRow[] = [
   {
     key: 'o1',
     id: 'DD2026020501703',
@@ -523,6 +555,34 @@ const orders = [
 
 const USE_REMOTE = false
 
+const mapRemoteOrder = (item: OrderItem): OrderRow => {
+  const first = item.items?.[0]
+  const status = item.status ?? '待支付'
+  const afterSale = /退款|售后/.test(status)
+  return {
+    key: item.id,
+    id: item.id,
+    productName: first?.name ?? '未命名商品',
+    productSku: first?.spec ?? '-',
+    spu: first?.spu ?? '-',
+    image: first?.image ?? 'https://picsum.photos/seed/order-default/80/80',
+    items: item.items ?? [],
+    orderTime: item.orderTime,
+    payTime: item.payTime,
+    status,
+    orderCode: item.orderCode,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    paidAmount: item.paidAmount,
+    payMethod: item.payMethod,
+    receiver: item.receiver,
+    phone: item.phone,
+    note: item.note,
+    settlement: item.settlement,
+    afterSale,
+  }
+}
+
 onMounted(async () => {
   if (!USE_REMOTE) return
   try {
@@ -539,7 +599,7 @@ onMounted(async () => {
       page: pagination.current,
       pageSize: pagination.pageSize,
     })
-    orders.splice(0, orders.length, ...res.list)
+    orders.splice(0, orders.length, ...res.list.map(mapRemoteOrder))
   } catch (error) {
     message.error('订单列表加载失败，请检查接口配置')
   }

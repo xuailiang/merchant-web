@@ -223,7 +223,7 @@
                   </template>
                   <a-dropdown
                     v-if="getProductMoreActions(item).length"
-                    :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
+                    :getPopupContainer="getPopupContainer"
                     :menu="{ items: getProductMoreMenuItems(item) }"
                   >
                     <a-button type="link">更多</a-button>
@@ -306,7 +306,7 @@
               </template>
               <a-dropdown
                 v-if="getProductMoreActions(record).length"
-                :getPopupContainer="(trigger) => (trigger?.ownerDocument?.body ?? document.body)"
+                :getPopupContainer="getPopupContainer"
                 :menu="{ items: getProductMoreMenuItems(record) }"
               >
                 <a-button size="small" class="action-btn">更多</a-button>
@@ -347,6 +347,7 @@ const viewMode = ref<'table' | 'card'>('table')
 const drafts = ref<Array<{ id: string; title: string; updatedAt: string; image?: string; price?: number | null; stock?: number | null }>>([])
 const DRAFT_KEY = 'product-drafts'
 const warningThreshold = ref(30)
+const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
 dayjs.extend(isBetween)
 const allColumns = [
   { title: '商品基本信息', dataIndex: 'info', key: 'info', width: 320 },
@@ -545,7 +546,7 @@ const categoryOptions = [
 const getProductStatusMeta = (status: string) =>
   productStatusConfig[status] ?? { label: status, color: 'default' }
 
-const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission)
+const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission as any)
 
 const getProductActions = (record: { status: string }) => {
   const keys = productStatusActions[record.status] ?? productStatusActions['上架中']

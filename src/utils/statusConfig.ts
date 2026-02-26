@@ -1,3 +1,5 @@
+import type { PermissionKey } from './permissions'
+
 export type StatusMeta = {
   label: string
   color: string
@@ -6,7 +8,7 @@ export type StatusMeta = {
 export type ActionDef<T = any> = {
   key: string
   label: string
-  permission?: string
+  permission?: PermissionKey
   danger?: boolean
   to?: (record: T) => string
 }
