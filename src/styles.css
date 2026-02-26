@@ -1,12 +1,21 @@
 :root {
-  font-family: "PingFang SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif;
+  font-family: 'PingFang SC', 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
   color: #1f1f1f;
   background-color: #f5f6f8;
   --app-bg: #f5f6f8;
   --card-bg: #ffffff;
+  --surface-1: #ffffff;
+  --surface-2: #f8fafc;
   --text-primary: #111827;
   --text-secondary: #6b7280;
+  --text-muted: #94a3b8;
   --border-color: #e5e7eb;
+  --danger-color: #ef4444;
+  --warning-color: #f59e0b;
+  --success-color: #10b981;
+  --danger-bg: rgba(239, 68, 68, 0.08);
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --success-bg: rgba(16, 185, 129, 0.12);
 }
 
 :root[data-theme='dark'] {
@@ -14,9 +23,18 @@
   background-color: #0f172a;
   --app-bg: #0f172a;
   --card-bg: #111827;
+  --surface-1: #111827;
+  --surface-2: #1f2937;
   --text-primary: #f9fafb;
   --text-secondary: #9ca3af;
+  --text-muted: #64748b;
   --border-color: #1f2937;
+  --danger-color: #f87171;
+  --warning-color: #fbbf24;
+  --success-color: #34d399;
+  --danger-bg: rgba(248, 113, 113, 0.16);
+  --warning-bg: rgba(251, 191, 36, 0.16);
+  --success-bg: rgba(52, 211, 153, 0.16);
 }
 
 * {
@@ -54,12 +72,26 @@ body {
 }
 
 .ant-table {
-  background: var(--card-bg);
+  background: var(--surface-1);
 }
 
 .ant-table-thead > tr > th {
-  background: var(--card-bg);
+  background: var(--surface-2);
   color: var(--text-secondary);
+}
+
+.ant-table-tbody > tr > td {
+  background: var(--surface-1);
+}
+
+.ant-alert-warning {
+  background: var(--warning-bg);
+  border-color: color-mix(in srgb, var(--warning-color) 28%, var(--border-color));
+}
+
+.ant-alert-message,
+.ant-alert-description {
+  color: var(--text-primary);
 }
 
 @media (max-width: 768px) {

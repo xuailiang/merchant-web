@@ -18,8 +18,22 @@
       <slot name="actions" />
     </div>
 
-    <div class="table-content">
-      <slot />
+    <div class="table-content" :class="{ loading: loading }">
+      <template v-if="loading">
+        <div v-if="skeletonMode === 'table'" class="table-skeleton">
+          <a-skeleton active :title="false" :paragraph="{ rows: skeletonRows, width: '100%' }" />
+        </div>
+        <div v-else class="card-skeleton-grid">
+          <a-skeleton
+            v-for="index in Math.max(2, Math.min(8, skeletonRows))"
+            :key="index"
+            active
+            avatar
+            :paragraph="{ rows: 3 }"
+          />
+        </div>
+      </template>
+      <slot v-else />
     </div>
 
     <div v-if="$slots.footer" class="table-footer">
@@ -31,13 +45,26 @@
 <script setup lang="ts">
 import { computed, useSlots } from 'vue'
 
-const props = defineProps<{
-  title?: string
-  subtitle?: string
-}>()
+const props = withDefaults(
+  defineProps<{
+    title?: string
+    subtitle?: string
+    loading?: boolean
+    skeletonRows?: number
+    skeletonMode?: 'table' | 'card'
+  }>(),
+  {
+    loading: false,
+    skeletonRows: 6,
+    skeletonMode: 'table',
+  }
+)
 
 const slots = useSlots()
 const showHeader = computed(() => !!props.title || !!props.subtitle || !!slots['header-extra'])
+const loading = computed(() => props.loading)
+const skeletonRows = computed(() => Math.max(2, props.skeletonRows))
+const skeletonMode = computed(() => props.skeletonMode)
 </script>
 
 <style scoped>
@@ -86,6 +113,20 @@ const showHeader = computed(() => !!props.title || !!props.subtitle || !!slots['
 
 .table-content {
   min-height: 120px;
+}
+
+.table-content.loading {
+  min-height: 280px;
+}
+
+.table-skeleton {
+  padding: 6px 0;
+}
+
+.card-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
 }
 
 .table-footer {

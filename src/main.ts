@@ -8,4 +8,22 @@ import { applyTheme } from './utils/theme'
 
 applyTheme()
 
-createApp(App).use(router).use(Antd).mount('#app')
+const removeAppLoading = () => {
+  const loading = document.getElementById('app-loading')
+  if (loading) loading.remove()
+}
+
+const bootstrap = async () => {
+  if (import.meta.env.VITE_USE_MSW === 'true') {
+    const { worker } = await import('./mocks/browser')
+    await worker.start({
+      onUnhandledRequest: 'bypass',
+    })
+  }
+
+  createApp(App).use(router).use(Antd).mount('#app')
+  removeAppLoading()
+}
+
+setTimeout(removeAppLoading, 8000)
+void bootstrap()

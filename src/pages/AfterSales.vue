@@ -2,45 +2,65 @@
   <div>
     <div class="page-title">售后/退款中心</div>
 
-    <a-card class="card-section">
-      <a-tabs v-model:active-key="activeTab" @change="onTabChange">
-        <a-tab-pane v-for="tab in tabOptions" :key="tab.key" :tab="`${tab.label} (${tab.count})`" />
-      </a-tabs>
+    <TableWrapper :loading="tableLoading">
+      <template #filters>
+        <a-tabs v-model:active-key="activeTab" @change="onTabChange">
+          <a-tab-pane
+            v-for="tab in tabOptions"
+            :key="tab.key"
+            :tab="`${tab.label} (${tab.count})`"
+          />
+        </a-tabs>
 
-      <a-form layout="inline" class="filter-bar">
-        <a-form-item label="关键词">
-          <a-input v-model:value="filters.keyword" placeholder="售后单号/订单号/客户" allow-clear />
-        </a-form-item>
-        <a-form-item label="售后类型">
-          <a-select v-model:value="filters.type" :options="typeOptions" allow-clear placeholder="全部" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-form-item label="状态">
-          <a-select v-model:value="filters.status" :options="statusOptions" allow-clear placeholder="全部" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-form-item label="申请时间">
-          <a-range-picker v-model:value="rangeValue" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-space>
-          <a-button type="primary">查询</a-button>
-          <a-button @click="resetFilters">重置</a-button>
-          <a-button v-if="hasPermission('after_sales:view')">导出</a-button>
-          <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
-        </a-space>
-      </a-form>
-    </a-card>
-
-    <a-card>
+        <a-form layout="inline" class="filter-bar">
+          <a-form-item label="关键词">
+            <a-input
+              v-model:value="filters.keyword"
+              placeholder="售后单号/订单号/客户"
+              allow-clear
+            />
+          </a-form-item>
+          <a-form-item label="售后类型">
+            <a-select
+              v-model:value="filters.type"
+              :options="typeOptions"
+              allow-clear
+              placeholder="全部"
+              :get-popup-container="getPopupContainer"
+            />
+          </a-form-item>
+          <a-form-item label="状态">
+            <a-select
+              v-model:value="filters.status"
+              :options="statusOptions"
+              allow-clear
+              placeholder="全部"
+              :get-popup-container="getPopupContainer"
+            />
+          </a-form-item>
+          <a-form-item label="申请时间">
+            <a-range-picker v-model:value="rangeValue" :get-popup-container="getPopupContainer" />
+          </a-form-item>
+          <a-space>
+            <a-button type="primary">查询</a-button>
+            <a-button @click="resetFilters">重置</a-button>
+            <a-button v-if="hasPermission('after_sales:view')">导出</a-button>
+            <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
+          </a-space>
+        </a-form>
+      </template>
       <a-table
         :columns="columns"
         :data-source="filteredCases"
-        :pagination="{ pageSize: 8 }"
+        :pagination="tablePagination"
         :scroll="{ x: 1400 }"
-        :loading="tableLoading"
         :locale="{ emptyText: h(TableEmpty, { description: '暂无售后数据' }) }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-tag :color="getAfterSalesStatusMeta(record.status).color">{{ getAfterSalesStatusMeta(record.status).label }}</a-tag>
+            <a-tag :color="getAfterSalesStatusMeta(record.status).color">{{
+              getAfterSalesStatusMeta(record.status).label
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'type'">
             <a-tag color="blue">{{ record.type }}</a-tag>
@@ -64,7 +84,7 @@
           </template>
         </template>
       </a-table>
-    </a-card>
+    </TableWrapper>
 
     <a-drawer v-model:open="detailOpen" width="960" title="退货单详情" :destroy-on-close="true">
       <template v-if="currentDetail">
@@ -78,40 +98,77 @@
 
         <a-card class="detail-card">
           <a-steps :current="currentDetail.stepIndex" size="small" class="detail-steps">
-            <a-step v-for="step in currentDetail.steps" :key="step.title" :title="step.title" :description="step.time" />
+            <a-step
+              v-for="step in currentDetail.steps"
+              :key="step.title"
+              :title="step.title"
+              :description="step.time"
+            />
           </a-steps>
         </a-card>
 
         <a-row :gutter="16" class="detail-grid">
           <a-col :xs="24" :lg="8">
             <a-card title="退款信息" class="detail-card">
-              <div class="detail-row"><span>售后类型</span><span>{{ currentDetail.type }}</span></div>
-              <div class="detail-row"><span>退款原因</span><span>{{ currentDetail.reason }}</span></div>
-              <div class="detail-row"><span>退款金额</span><span class="highlight">¥{{ currentDetail.refundAmount }}</span></div>
-              <div class="detail-row"><span>其中运费</span><span>¥{{ currentDetail.freight }}</span></div>
+              <div class="detail-row">
+                <span>售后类型</span><span>{{ currentDetail.type }}</span>
+              </div>
+              <div class="detail-row">
+                <span>退款原因</span><span>{{ currentDetail.reason }}</span>
+              </div>
+              <div class="detail-row">
+                <span>退款金额</span
+                ><span class="highlight">¥{{ currentDetail.refundAmount }}</span>
+              </div>
+              <div class="detail-row">
+                <span>其中运费</span><span>¥{{ currentDetail.freight }}</span>
+              </div>
             </a-card>
           </a-col>
           <a-col :xs="24" :lg="8">
             <a-card title="支付信息" class="detail-card">
-              <div class="detail-row"><span>订单编号</span><span class="link">{{ currentDetail.orderId }}</span></div>
-              <div class="detail-row"><span>支付时间</span><span>{{ currentDetail.payTime }}</span></div>
-              <div class="detail-row"><span>优惠金额</span><span>¥{{ currentDetail.discount }}</span></div>
-              <div class="detail-row"><span>积分抵扣</span><span>¥{{ currentDetail.pointDiscount }}</span></div>
-              <div class="detail-row"><span>运费金额</span><span>¥{{ currentDetail.freight }}</span></div>
-              <div class="detail-row"><span>支付金额</span><span class="highlight">¥{{ currentDetail.payAmount }}</span></div>
+              <div class="detail-row">
+                <span>订单编号</span><span class="link">{{ currentDetail.orderId }}</span>
+              </div>
+              <div class="detail-row">
+                <span>支付时间</span><span>{{ currentDetail.payTime }}</span>
+              </div>
+              <div class="detail-row">
+                <span>优惠金额</span><span>¥{{ currentDetail.discount }}</span>
+              </div>
+              <div class="detail-row">
+                <span>积分抵扣</span><span>¥{{ currentDetail.pointDiscount }}</span>
+              </div>
+              <div class="detail-row">
+                <span>运费金额</span><span>¥{{ currentDetail.freight }}</span>
+              </div>
+              <div class="detail-row">
+                <span>支付金额</span><span class="highlight">¥{{ currentDetail.payAmount }}</span>
+              </div>
             </a-card>
           </a-col>
           <a-col :xs="24" :lg="8">
             <a-card title="买家信息" class="detail-card">
-              <div class="detail-row"><span>买家昵称</span><span>{{ currentDetail.buyer }}</span></div>
-              <div class="detail-row"><span>下单号码</span><span>{{ currentDetail.phone }}</span></div>
-              <div class="detail-row"><span>收货地址</span><span>{{ currentDetail.address }}</span></div>
+              <div class="detail-row">
+                <span>买家昵称</span><span>{{ currentDetail.buyer }}</span>
+              </div>
+              <div class="detail-row">
+                <span>下单号码</span><span>{{ currentDetail.phone }}</span>
+              </div>
+              <div class="detail-row">
+                <span>收货地址</span><span>{{ currentDetail.address }}</span>
+              </div>
             </a-card>
           </a-col>
         </a-row>
 
         <a-card class="detail-card" title="商品明细">
-          <a-table :columns="productColumns" :data-source="currentDetail.items" :pagination="false" size="small">
+          <a-table
+            :columns="productColumns"
+            :data-source="currentDetail.items"
+            :pagination="false"
+            size="small"
+          >
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'product'">
                 <div class="product-cell">
@@ -131,10 +188,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
-import { usePersistedFilters } from '../utils/usePersistedFilters'
+import { useListPageState } from '../utils/useListPageState'
 import { hasPermission } from '../utils/permissions'
 import {
   afterSalesActionConfig,
@@ -146,6 +203,7 @@ import { fetchAfterSales } from '../api/endpoints'
 import { message } from 'ant-design-vue'
 import ColumnSetting from '../components/ColumnSetting.vue'
 import TableEmpty from '../components/TableEmpty.vue'
+import TableWrapper from '../components/TableWrapper.vue'
 import { useColumnConfig } from '../utils/columnConfig'
 
 dayjs.extend(isBetween)
@@ -339,8 +397,9 @@ const cases = [
 
 const USE_REMOTE = false
 
-onMounted(async () => {
+const loadCases = async () => {
   if (!USE_REMOTE) return
+  tableLoading.value = true
   try {
     const res = await fetchAfterSales({
       keyword: filters.keyword,
@@ -350,10 +409,12 @@ onMounted(async () => {
       endDate: filters.dateRange[1],
     })
     cases.splice(0, cases.length, ...(res.list as any[]))
-  } catch (error) {
+  } catch {
     message.error('售后列表加载失败，请检查接口配置')
+  } finally {
+    tableLoading.value = false
   }
-})
+}
 
 const allColumns = [
   { title: '售后单号', dataIndex: 'id', key: 'id', width: 160 },
@@ -368,8 +429,13 @@ const allColumns = [
   { title: '操作', key: 'action', fixed: 'right', width: 140 },
 ]
 
-const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:after-sales', allColumns)
+const {
+  visibleKeys,
+  filteredColumns: columns,
+  reset,
+} = useColumnConfig('columns:after-sales', allColumns)
 const tableLoading = ref(false)
+const scrollContainerRef = ref<HTMLElement | null>(null)
 
 const productColumns = [
   { title: '商品', key: 'product' },
@@ -377,12 +443,18 @@ const productColumns = [
   { title: '售后数量', dataIndex: 'qty', key: 'qty', width: 120 },
 ]
 
-const filters = usePersistedFilters('filters:after-sales', {
-  keyword: '',
-  type: '',
-  status: '',
-  dateRange: [] as string[],
-  activeTab: 'all',
+const { filters, pagination, bindScrollContainer } = useListPageState('list:after-sales', {
+  filters: {
+    keyword: '',
+    type: '',
+    status: '',
+    dateRange: [] as string[],
+    activeTab: 'all',
+  },
+  pagination: {
+    current: 1,
+    pageSize: 8,
+  },
 })
 
 const typeOptions = [
@@ -407,10 +479,26 @@ const activeTab = computed({
 
 const tabOptions = computed(() => [
   { key: 'all', label: '全部', count: cases.length },
-  { key: '待审核', label: '待审核', count: cases.filter((item) => item.status === '待审核').length },
-  { key: '处理中', label: '处理中', count: cases.filter((item) => item.status === '处理中').length },
-  { key: '已退款', label: '已退款', count: cases.filter((item) => item.status === '已退款').length },
-  { key: '已拒绝', label: '已拒绝', count: cases.filter((item) => item.status === '已拒绝').length },
+  {
+    key: '待审核',
+    label: '待审核',
+    count: cases.filter((item) => item.status === '待审核').length,
+  },
+  {
+    key: '处理中',
+    label: '处理中',
+    count: cases.filter((item) => item.status === '处理中').length,
+  },
+  {
+    key: '已退款',
+    label: '已退款',
+    count: cases.filter((item) => item.status === '已退款').length,
+  },
+  {
+    key: '已拒绝',
+    label: '已拒绝',
+    count: cases.filter((item) => item.status === '已拒绝').length,
+  },
 ])
 
 const rangeValue = computed({
@@ -447,10 +535,31 @@ const filteredCases = computed(() => {
   })
 })
 
-const detailOpen = ref(false)
-const currentDetail = ref<typeof cases[0]['detail'] | null>(null)
+watch(
+  () => filteredCases.value.length,
+  (total) => {
+    const max = Math.max(1, Math.ceil(total / pagination.pageSize))
+    if (pagination.current > max) pagination.current = max
+  },
+  { immediate: true }
+)
 
-const openDetail = (record: typeof cases[0]) => {
+const tablePagination = computed(() => ({
+  current: pagination.current,
+  pageSize: pagination.pageSize,
+  total: filteredCases.value.length,
+  showSizeChanger: true,
+  pageSizeOptions: ['8', '20', '50'],
+  onChange: (page: number, pageSize: number) => {
+    pagination.current = page
+    pagination.pageSize = pageSize
+  },
+}))
+
+const detailOpen = ref(false)
+const currentDetail = ref<(typeof cases)[0]['detail'] | null>(null)
+
+const openDetail = (record: (typeof cases)[0]) => {
   currentDetail.value = record.detail
   detailOpen.value = true
 }
@@ -461,23 +570,35 @@ const resetFilters = () => {
   filters.status = ''
   filters.dateRange = []
   filters.activeTab = 'all'
+  pagination.current = 1
 }
 
 const onTabChange = () => {
   filters.status = ''
+  pagination.current = 1
 }
 
 const getAfterSalesStatusMeta = (status: string) =>
   afterSalesStatusConfig[status] ?? { label: status, color: 'default' }
 
-const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission as any)
+const isActionAllowed = (action: ActionDef) =>
+  !action.permission || hasPermission(action.permission as any)
 
 const getAfterSalesActions = (record: { status: string }) => {
   const keys = afterSalesStatusActions[record.status] ?? ['view']
-  return keys.map((key) => afterSalesActionConfig[key]).filter(Boolean).filter(isActionAllowed)
+  return keys
+    .map((key) => afterSalesActionConfig[key])
+    .filter(Boolean)
+    .filter(isActionAllowed)
 }
 
 const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
+
+onMounted(() => {
+  scrollContainerRef.value = document.querySelector('.layout-content') as HTMLElement | null
+  bindScrollContainer(scrollContainerRef)
+  void loadCases()
+})
 </script>
 
 <style scoped>
@@ -491,7 +612,7 @@ const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || docum
 
 .amount-cell {
   font-weight: 600;
-  color: #ef4444;
+  color: var(--danger-color);
 }
 
 .amount-sub {
@@ -547,7 +668,7 @@ const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || docum
 }
 
 .detail-row .highlight {
-  color: #ef4444;
+  color: var(--danger-color);
 }
 
 .detail-row .link {

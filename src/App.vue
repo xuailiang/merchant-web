@@ -15,6 +15,10 @@ const themeConfig = computed(() => ({
     colorPrimary: '#1f6feb',
     borderRadius: 10,
     fontFamily: '"PingFang SC", "Noto Sans SC", "Helvetica Neue", Arial, sans-serif',
+    colorBgContainer: themeMode.value === 'dark' ? '#111827' : '#ffffff',
+    colorBgLayout: themeMode.value === 'dark' ? '#0f172a' : '#f5f6f8',
+    colorBorderSecondary: themeMode.value === 'dark' ? '#1f2937' : '#e5e7eb',
+    colorTextSecondary: themeMode.value === 'dark' ? '#9ca3af' : '#6b7280',
   },
   algorithm: themeMode.value === 'dark' ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
 }))

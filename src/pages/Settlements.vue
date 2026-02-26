@@ -2,66 +2,92 @@
   <div>
     <div class="page-title">结算管理</div>
 
-    <a-card class="card-section">
-      <a-tabs v-model:active-key="activeTab">
-        <a-tab-pane key="payment" tab="打款单" />
-        <a-tab-pane key="detail" tab="打款单明细" />
-      </a-tabs>
+    <TableWrapper :loading="tableLoading">
+      <template #filters>
+        <a-tabs v-model:active-key="activeTab">
+          <a-tab-pane key="payment" tab="打款单" />
+          <a-tab-pane key="detail" tab="打款单明细" />
+        </a-tabs>
 
-      <a-form v-if="activeTab === 'payment'" layout="inline" class="filter-bar">
-        <a-form-item label="供货商名称">
-          <a-input v-model:value="paymentFilters.supplier" placeholder="请输入供货商名称" allow-clear />
-        </a-form-item>
-        <a-form-item label="结算日期">
-          <a-range-picker v-model:value="paymentRange" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-form-item label="是否结算">
-          <a-select v-model:value="paymentFilters.status" :options="settleOptions" placeholder="全部" style="min-width: 120px" />
-        </a-form-item>
-        <a-form-item label="是否汇总">
-          <a-switch v-model:checked="paymentFilters.summary" />
-        </a-form-item>
-        <a-space>
-          <a-button type="primary">查询</a-button>
-          <a-button @click="resetPayment">重置</a-button>
-          <a-button>导出</a-button>
-          <ColumnSetting :columns="paymentAllColumns" v-model="paymentVisible" @reset="resetPaymentColumns" />
-        </a-space>
-      </a-form>
+        <a-form v-if="activeTab === 'payment'" layout="inline" class="filter-bar">
+          <a-form-item label="供货商名称">
+            <a-input
+              v-model:value="paymentFilters.supplier"
+              placeholder="请输入供货商名称"
+              allow-clear
+            />
+          </a-form-item>
+          <a-form-item label="结算日期">
+            <a-range-picker v-model:value="paymentRange" :get-popup-container="getPopupContainer" />
+          </a-form-item>
+          <a-form-item label="是否结算">
+            <a-select
+              v-model:value="paymentFilters.status"
+              :options="settleOptions"
+              placeholder="全部"
+              style="min-width: 120px"
+            />
+          </a-form-item>
+          <a-form-item label="是否汇总">
+            <a-switch v-model:checked="paymentFilters.summary" />
+          </a-form-item>
+          <a-space>
+            <a-button type="primary">查询</a-button>
+            <a-button @click="resetPayment">重置</a-button>
+            <a-button>导出</a-button>
+            <ColumnSetting
+              :columns="paymentAllColumns"
+              v-model="paymentVisible"
+              @reset="resetPaymentColumns"
+            />
+          </a-space>
+        </a-form>
 
-      <a-form v-else layout="inline" class="filter-bar">
-        <a-form-item label="供货商名称">
-          <a-input v-model:value="detailFilters.supplier" placeholder="请输入供货商名称" allow-clear />
-        </a-form-item>
-        <a-form-item label="结算日期">
-          <a-range-picker v-model:value="detailRange" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-form-item label="是否结算">
-          <a-select v-model:value="detailFilters.status" :options="settleOptions" placeholder="全部" style="min-width: 120px" />
-        </a-form-item>
-        <div class="summary-text">订单金额：<span>0</span> 元</div>
-        <a-space>
-          <a-button type="primary">查询</a-button>
-          <a-button @click="resetDetail">重置</a-button>
-          <a-button>导出</a-button>
-          <ColumnSetting :columns="detailAllColumns" v-model="detailVisible" @reset="resetDetailColumns" />
-        </a-space>
-      </a-form>
-    </a-card>
-
-    <a-card>
+        <a-form v-else layout="inline" class="filter-bar">
+          <a-form-item label="供货商名称">
+            <a-input
+              v-model:value="detailFilters.supplier"
+              placeholder="请输入供货商名称"
+              allow-clear
+            />
+          </a-form-item>
+          <a-form-item label="结算日期">
+            <a-range-picker v-model:value="detailRange" :get-popup-container="getPopupContainer" />
+          </a-form-item>
+          <a-form-item label="是否结算">
+            <a-select
+              v-model:value="detailFilters.status"
+              :options="settleOptions"
+              placeholder="全部"
+              style="min-width: 120px"
+            />
+          </a-form-item>
+          <div class="summary-text">订单金额：<span>0</span> 元</div>
+          <a-space>
+            <a-button type="primary">查询</a-button>
+            <a-button @click="resetDetail">重置</a-button>
+            <a-button>导出</a-button>
+            <ColumnSetting
+              :columns="detailAllColumns"
+              v-model="detailVisible"
+              @reset="resetDetailColumns"
+            />
+          </a-space>
+        </a-form>
+      </template>
       <a-table
         v-if="activeTab === 'payment'"
         :columns="paymentColumns"
         :data-source="filteredPayments"
-        :pagination="{ pageSize: 8 }"
+        :pagination="paymentTablePagination"
         :scroll="{ x: 1400 }"
-        :loading="tableLoading"
         :locale="{ emptyText: h(TableEmpty, { description: '暂无结算数据' }) }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-tag :color="getSettlementStatusMeta(record.status).color">{{ getSettlementStatusMeta(record.status).label }}</a-tag>
+            <a-tag :color="getSettlementStatusMeta(record.status).color">{{
+              getSettlementStatusMeta(record.status).label
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-space>
@@ -77,14 +103,15 @@
         v-else
         :columns="detailColumns"
         :data-source="filteredDetails"
-        :pagination="{ pageSize: 8 }"
+        :pagination="detailTablePagination"
         :scroll="{ x: 1800 }"
-        :loading="tableLoading"
         :locale="{ emptyText: h(TableEmpty, { description: '暂无明细数据' }) }"
       >
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'status'">
-            <a-tag :color="getSettlementStatusMeta(record.status).color">{{ getSettlementStatusMeta(record.status).label }}</a-tag>
+            <a-tag :color="getSettlementStatusMeta(record.status).color">{{
+              getSettlementStatusMeta(record.status).label
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'action'">
             <a-space>
@@ -95,12 +122,12 @@
           </template>
         </template>
       </a-table>
-    </a-card>
+    </TableWrapper>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import {
   settlementActionConfig,
@@ -112,7 +139,9 @@ import { fetchSettlementDetails, fetchSettlementPayments } from '../api/endpoint
 import { message } from 'ant-design-vue'
 import ColumnSetting from '../components/ColumnSetting.vue'
 import TableEmpty from '../components/TableEmpty.vue'
+import TableWrapper from '../components/TableWrapper.vue'
 import { useColumnConfig } from '../utils/columnConfig'
+import { useListPageState } from '../utils/useListPageState'
 
 const activeTab = ref('payment')
 
@@ -161,17 +190,20 @@ const detailAllColumns = [
   { title: '操作', key: 'action', fixed: 'right', width: 120 },
 ]
 
-const { visibleKeys: paymentVisible, filteredColumns: paymentColumns, reset: resetPaymentColumns } = useColumnConfig(
-  'columns:settlements:payment',
-  paymentAllColumns
-)
+const {
+  visibleKeys: paymentVisible,
+  filteredColumns: paymentColumns,
+  reset: resetPaymentColumns,
+} = useColumnConfig('columns:settlements:payment', paymentAllColumns)
 
-const { visibleKeys: detailVisible, filteredColumns: detailColumns, reset: resetDetailColumns } = useColumnConfig(
-  'columns:settlements:detail',
-  detailAllColumns
-)
+const {
+  visibleKeys: detailVisible,
+  filteredColumns: detailColumns,
+  reset: resetDetailColumns,
+} = useColumnConfig('columns:settlements:detail', detailAllColumns)
 
 const tableLoading = ref(false)
+const scrollContainerRef = ref<HTMLElement | null>(null)
 
 const paymentData = [
   {
@@ -218,43 +250,66 @@ const detailData = [
 
 const USE_REMOTE = false
 
-onMounted(async () => {
+const {
+  filters: paymentFilters,
+  pagination: paymentPagination,
+  bindScrollContainer: bindPaymentScrollContainer,
+} = useListPageState('list:settlements:payment', {
+  filters: {
+    supplier: '',
+    status: '',
+    summary: false,
+    dateRange: [] as string[],
+  },
+  pagination: {
+    current: 1,
+    pageSize: 8,
+  },
+})
+
+const {
+  filters: detailFilters,
+  pagination: detailPagination,
+  bindScrollContainer: bindDetailScrollContainer,
+} = useListPageState('list:settlements:detail', {
+  filters: {
+    supplier: '',
+    status: '',
+    dateRange: [] as string[],
+  },
+  pagination: {
+    current: 1,
+    pageSize: 8,
+  },
+})
+
+const loadSettlements = async () => {
   if (!USE_REMOTE) return
+  tableLoading.value = true
   try {
     const [payments, details] = await Promise.all([
       fetchSettlementPayments({
-        supplier: paymentFilters.value.supplier,
-        status: paymentFilters.value.status,
-        startDate: paymentFilters.value.dateRange[0],
-        endDate: paymentFilters.value.dateRange[1],
-        summary: paymentFilters.value.summary,
+        supplier: paymentFilters.supplier,
+        status: paymentFilters.status,
+        startDate: paymentFilters.dateRange[0],
+        endDate: paymentFilters.dateRange[1],
+        summary: paymentFilters.summary,
       }),
       fetchSettlementDetails({
-        supplier: detailFilters.value.supplier,
-        status: detailFilters.value.status,
-        startDate: detailFilters.value.dateRange[0],
-        endDate: detailFilters.value.dateRange[1],
+        supplier: detailFilters.supplier,
+        status: detailFilters.status,
+        startDate: detailFilters.dateRange[0],
+        endDate: detailFilters.dateRange[1],
       }),
     ])
     paymentData.splice(0, paymentData.length, ...payments.list)
     detailData.splice(0, detailData.length, ...details.list)
-  } catch (error) {
+  } catch {
     message.error('结算数据加载失败，请检查接口配置')
+  } finally {
+    tableLoading.value = false
   }
-})
-
-const paymentFilters = ref({
-  supplier: '',
-  status: '',
-  summary: false,
-  dateRange: [] as string[],
-})
-
-const detailFilters = ref({
-  supplier: '',
-  status: '',
-  dateRange: [] as string[],
-})
+}
 
 const getSettlementStatusMeta = (status: string) =>
   settlementStatusConfig[status] ?? { label: status, color: 'default' }
@@ -263,68 +318,127 @@ const isActionAllowed = (action: ActionDef) => !action.permission
 
 const getSettlementActions = (record: { status: string }) => {
   const keys = settlementStatusActions[record.status] ?? ['view']
-  return keys.map((key) => settlementActionConfig[key]).filter(Boolean).filter(isActionAllowed)
+  return keys
+    .map((key) => settlementActionConfig[key])
+    .filter(Boolean)
+    .filter(isActionAllowed)
 }
 
 const paymentRange = computed({
   get: () => {
-    if (paymentFilters.value.dateRange.length === 2) {
-      return [dayjs(paymentFilters.value.dateRange[0]), dayjs(paymentFilters.value.dateRange[1])]
+    if (paymentFilters.dateRange.length === 2) {
+      return [dayjs(paymentFilters.dateRange[0]), dayjs(paymentFilters.dateRange[1])]
     }
     return null
   },
   set: (value) => {
     if (!value || value.length !== 2) {
-      paymentFilters.value.dateRange = []
+      paymentFilters.dateRange = []
       return
     }
-    paymentFilters.value.dateRange = [value[0].format('YYYY-MM-DD'), value[1].format('YYYY-MM-DD')]
+    paymentFilters.dateRange = [value[0].format('YYYY-MM-DD'), value[1].format('YYYY-MM-DD')]
   },
 })
 
 const detailRange = computed({
   get: () => {
-    if (detailFilters.value.dateRange.length === 2) {
-      return [dayjs(detailFilters.value.dateRange[0]), dayjs(detailFilters.value.dateRange[1])]
+    if (detailFilters.dateRange.length === 2) {
+      return [dayjs(detailFilters.dateRange[0]), dayjs(detailFilters.dateRange[1])]
     }
     return null
   },
   set: (value) => {
     if (!value || value.length !== 2) {
-      detailFilters.value.dateRange = []
+      detailFilters.dateRange = []
       return
     }
-    detailFilters.value.dateRange = [value[0].format('YYYY-MM-DD'), value[1].format('YYYY-MM-DD')]
+    detailFilters.dateRange = [value[0].format('YYYY-MM-DD'), value[1].format('YYYY-MM-DD')]
   },
 })
 
 const filteredPayments = computed(() => {
-  const keyword = paymentFilters.value.supplier.trim()
+  const keyword = paymentFilters.supplier.trim()
   return paymentData.filter((item) => {
     const matchSupplier = !keyword || item.supplier.includes(keyword)
-    const matchStatus = !paymentFilters.value.status || item.status === paymentFilters.value.status
+    const matchStatus = !paymentFilters.status || item.status === paymentFilters.status
     return matchSupplier && matchStatus
   })
 })
 
 const filteredDetails = computed(() => {
-  const keyword = detailFilters.value.supplier.trim()
+  const keyword = detailFilters.supplier.trim()
   return detailData.filter((item) => {
     const matchSupplier = !keyword || item.supplier.includes(keyword)
-    const matchStatus = !detailFilters.value.status || item.status === detailFilters.value.status
+    const matchStatus = !detailFilters.status || item.status === detailFilters.status
     return matchSupplier && matchStatus
   })
 })
 
+watch(
+  () => filteredPayments.value.length,
+  (total) => {
+    const max = Math.max(1, Math.ceil(total / paymentPagination.pageSize))
+    if (paymentPagination.current > max) paymentPagination.current = max
+  },
+  { immediate: true }
+)
+
+watch(
+  () => filteredDetails.value.length,
+  (total) => {
+    const max = Math.max(1, Math.ceil(total / detailPagination.pageSize))
+    if (detailPagination.current > max) detailPagination.current = max
+  },
+  { immediate: true }
+)
+
+const paymentTablePagination = computed(() => ({
+  current: paymentPagination.current,
+  pageSize: paymentPagination.pageSize,
+  total: filteredPayments.value.length,
+  showSizeChanger: true,
+  pageSizeOptions: ['8', '20', '50'],
+  onChange: (page: number, pageSize: number) => {
+    paymentPagination.current = page
+    paymentPagination.pageSize = pageSize
+  },
+}))
+
+const detailTablePagination = computed(() => ({
+  current: detailPagination.current,
+  pageSize: detailPagination.pageSize,
+  total: filteredDetails.value.length,
+  showSizeChanger: true,
+  pageSizeOptions: ['8', '20', '50'],
+  onChange: (page: number, pageSize: number) => {
+    detailPagination.current = page
+    detailPagination.pageSize = pageSize
+  },
+}))
+
 const resetPayment = () => {
-  paymentFilters.value = { supplier: '', status: '', summary: false, dateRange: [] }
+  paymentFilters.supplier = ''
+  paymentFilters.status = ''
+  paymentFilters.summary = false
+  paymentFilters.dateRange = []
+  paymentPagination.current = 1
 }
 
 const resetDetail = () => {
-  detailFilters.value = { supplier: '', status: '', dateRange: [] }
+  detailFilters.supplier = ''
+  detailFilters.status = ''
+  detailFilters.dateRange = []
+  detailPagination.current = 1
 }
 
 const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
+
+onMounted(() => {
+  scrollContainerRef.value = document.querySelector('.layout-content') as HTMLElement | null
+  bindPaymentScrollContainer(scrollContainerRef)
+  bindDetailScrollContainer(scrollContainerRef)
+  void loadSettlements()
+})
 </script>
 
 <style scoped>
@@ -343,7 +457,7 @@ const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || docum
 }
 
 .summary-text span {
-  color: #16a34a;
+  color: var(--success-color);
   font-weight: 600;
 }
 </style>

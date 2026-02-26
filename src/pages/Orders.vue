@@ -2,54 +2,58 @@
   <div>
     <div class="page-title">订单管理</div>
 
-    <TableWrapper>
+    <TableWrapper :loading="tableLoading">
       <template #filters>
-      <a-tabs v-model:active-key="activeTab" class="order-tabs" @change="onTabChange">
-        <a-tab-pane v-for="tab in tabOptions" :key="tab.key" :tab="`${tab.label} (${tab.count})`" />
-      </a-tabs>
-      <a-alert
-        type="warning"
-        show-icon
-        message="温馨提示：列表中标记红色的订单为售后中的订单，请先在售后订单中处理服务单，再进行发货操作，以免出现重复发货。"
-        class="warning-tip"
-      />
-
-      <a-form layout="inline" class="filter-bar">
-        <a-form-item label="订单编号">
-          <a-input v-model:value="filters.orderId" placeholder="请输入订单编号" allow-clear />
-        </a-form-item>
-        <a-form-item label="订单状态">
-          <a-select
-            v-model:value="filters.statuses"
-            :options="statusOptions"
-            mode="multiple"
-            allow-clear
-            placeholder="全部"
-            style="min-width: 220px"
-            :get-popup-container="getPopupContainer"
+        <a-tabs v-model:active-key="activeTab" class="order-tabs" @change="onTabChange">
+          <a-tab-pane
+            v-for="tab in tabOptions"
+            :key="tab.key"
+            :tab="`${tab.label} (${tab.count})`"
           />
-        </a-form-item>
-        <a-form-item label="下单号码">
-          <a-input v-model:value="filters.orderCode" placeholder="请输入下单号码" allow-clear />
-        </a-form-item>
-        <a-form-item label="商品名称">
-          <a-input v-model:value="filters.productName" placeholder="请输入商品名称" allow-clear />
-        </a-form-item>
-        <a-form-item label="收货人手机">
-          <a-input v-model:value="filters.phone" placeholder="请输入收货人手机号" allow-clear />
-        </a-form-item>
-        <a-form-item label="下单时间">
-          <a-range-picker v-model:value="orderRange" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-form-item label="支付时间">
-          <a-range-picker v-model:value="payRange" :get-popup-container="getPopupContainer" />
-        </a-form-item>
-        <a-space>
-          <a-button type="primary">搜索</a-button>
-          <a-button v-if="hasPermission('orders:export')" @click="exportOrders()">导出</a-button>
-          <a-button @click="resetFilters">重置</a-button>
-        </a-space>
-      </a-form>
+        </a-tabs>
+        <a-alert
+          type="warning"
+          show-icon
+          message="温馨提示：列表中标记红色的订单为售后中的订单，请先在售后订单中处理服务单，再进行发货操作，以免出现重复发货。"
+          class="warning-tip"
+        />
+
+        <a-form layout="inline" class="filter-bar">
+          <a-form-item label="订单编号">
+            <a-input v-model:value="filters.orderId" placeholder="请输入订单编号" allow-clear />
+          </a-form-item>
+          <a-form-item label="订单状态">
+            <a-select
+              v-model:value="filters.statuses"
+              :options="statusOptions"
+              mode="multiple"
+              allow-clear
+              placeholder="全部"
+              style="min-width: 220px"
+              :get-popup-container="getPopupContainer"
+            />
+          </a-form-item>
+          <a-form-item label="下单号码">
+            <a-input v-model:value="filters.orderCode" placeholder="请输入下单号码" allow-clear />
+          </a-form-item>
+          <a-form-item label="商品名称">
+            <a-input v-model:value="filters.productName" placeholder="请输入商品名称" allow-clear />
+          </a-form-item>
+          <a-form-item label="收货人手机">
+            <a-input v-model:value="filters.phone" placeholder="请输入收货人手机号" allow-clear />
+          </a-form-item>
+          <a-form-item label="下单时间">
+            <a-range-picker v-model:value="orderRange" :get-popup-container="getPopupContainer" />
+          </a-form-item>
+          <a-form-item label="支付时间">
+            <a-range-picker v-model:value="payRange" :get-popup-container="getPopupContainer" />
+          </a-form-item>
+          <a-space>
+            <a-button type="primary">搜索</a-button>
+            <a-button v-if="hasPermission('orders:export')" @click="exportOrders()">导出</a-button>
+            <a-button @click="resetFilters">重置</a-button>
+          </a-space>
+        </a-form>
       </template>
 
       <template #actions>
@@ -59,7 +63,11 @@
           </a-upload>
           <a-space>
             <a-button>上传</a-button>
-            <a-button v-if="hasPermission('orders:export')" type="primary" ghost @click="exportOrders('待发货')"
+            <a-button
+              v-if="hasPermission('orders:export')"
+              type="primary"
+              ghost
+              @click="exportOrders('待发货')"
               >待发货导出</a-button
             >
             <ColumnSetting :columns="allColumns" v-model="visibleKeys" @reset="reset" />
@@ -86,12 +94,18 @@
                 </div>
                 <div class="mobile-row">
                   <span class="mobile-label">状态</span>
-                  <a-tag :color="getOrderStatusMeta(item.status).color">{{ getOrderStatusMeta(item.status).label }}</a-tag>
+                  <a-tag :color="getOrderStatusMeta(item.status).color">{{
+                    getOrderStatusMeta(item.status).label
+                  }}</a-tag>
                 </div>
                 <div class="mobile-actions">
                   <template v-for="action in getOrderPrimaryActions(item)" :key="action.key">
-                    <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{ action.label }}</RouterLink>
-                    <a-button v-else-if="isActionAllowed(action)" type="link">{{ action.label }}</a-button>
+                    <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{
+                      action.label
+                    }}</RouterLink>
+                    <a-button v-else-if="isActionAllowed(action)" type="link">{{
+                      action.label
+                    }}</a-button>
                   </template>
                 </div>
               </a-card>
@@ -111,17 +125,20 @@
         v-else
         :columns="columns"
         :data-source="filteredOrders"
-        :pagination="{ pageSize: 8 }"
+        :pagination="tablePagination"
         :scroll="{ x: 1200 }"
         :row-class-name="rowClassName"
-        :loading="tableLoading"
         :locale="{ emptyText: h(TableEmpty, { description: '暂无订单数据' }) }"
       >
         <template #expandedRowRender="{ record }">
           <div class="expand-panel">
             <div class="expand-products">
               <div class="expand-title">商品明细</div>
-              <div v-for="(item, index) in record.items ?? []" :key="index" class="expand-product-item">
+              <div
+                v-for="(item, index) in record.items ?? []"
+                :key="index"
+                class="expand-product-item"
+              >
                 <img :src="item.image" alt="商品" />
                 <div class="expand-product-info">
                   <div class="expand-product-name">{{ item.name }}</div>
@@ -133,7 +150,9 @@
                   <div class="expand-product-qty">x{{ item.qty }}</div>
                 </div>
               </div>
-              <div v-if="!record.items || record.items.length === 0" class="expand-empty">暂无商品明细</div>
+              <div v-if="!record.items || record.items.length === 0" class="expand-empty">
+                暂无商品明细
+              </div>
             </div>
             <div class="expand-row">
               <div class="expand-label">支付信息</div>
@@ -160,14 +179,20 @@
                 <div class="product-title">{{ record.items?.[0]?.name ?? record.productName }}</div>
                 <div class="product-meta">{{ record.items?.[0]?.spec ?? record.productSku }}</div>
                 <div class="product-meta">SPU: {{ record.items?.[0]?.spu ?? record.spu }}</div>
-                <a-tag v-if="record.items && record.items.length > 1" color="blue" class="multi-tag">
+                <a-tag
+                  v-if="record.items && record.items.length > 1"
+                  color="blue"
+                  class="multi-tag"
+                >
                   +{{ record.items.length - 1 }} 件商品
                 </a-tag>
               </div>
             </div>
           </template>
           <template v-else-if="column.key === 'status'">
-            <a-tag :color="getOrderStatusMeta(record.status).color">{{ getOrderStatusMeta(record.status).label }}</a-tag>
+            <a-tag :color="getOrderStatusMeta(record.status).color">{{
+              getOrderStatusMeta(record.status).label
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'amount'">
             <div class="amount-main">{{ record.paidAmount }}</div>
@@ -180,8 +205,12 @@
           <template v-else-if="column.key === 'action'">
             <a-space>
               <template v-for="action in getOrderPrimaryActions(record)" :key="action.key">
-                <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(record)">{{ action.label }}</RouterLink>
-                <a-button v-else-if="isActionAllowed(action)" type="link">{{ action.label }}</a-button>
+                <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(record)">{{
+                  action.label
+                }}</RouterLink>
+                <a-button v-else-if="isActionAllowed(action)" type="link">{{
+                  action.label
+                }}</a-button>
               </template>
               <a-dropdown
                 v-if="getOrderMoreActions(record).length > 0"
@@ -198,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import { RouterLink, useRouter } from 'vue-router'
@@ -206,9 +235,14 @@ import TableWrapper from '../components/TableWrapper.vue'
 import ColumnSetting from '../components/ColumnSetting.vue'
 import TableEmpty from '../components/TableEmpty.vue'
 import { useIsMobile } from '../utils/useIsMobile'
-import { usePersistedFilters } from '../utils/usePersistedFilters'
+import { useListPageState } from '../utils/useListPageState'
 import { hasPermission } from '../utils/permissions'
-import { orderActionConfig, orderStatusActions, orderStatusConfig, type ActionDef } from '../utils/statusConfig'
+import {
+  orderActionConfig,
+  orderStatusActions,
+  orderStatusConfig,
+  type ActionDef,
+} from '../utils/statusConfig'
 import { message } from 'ant-design-vue'
 import { fetchOrders, type OrderItem } from '../api/endpoints'
 import { createExportTask } from '../utils/exports'
@@ -228,8 +262,13 @@ const allColumns = [
   { title: '操作', key: 'action', fixed: 'right', width: 160 },
 ]
 
-const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:orders', allColumns)
+const {
+  visibleKeys,
+  filteredColumns: columns,
+  reset,
+} = useColumnConfig('columns:orders', allColumns)
 const tableLoading = ref(false)
+const scrollContainerRef = ref<HTMLElement | null>(null)
 
 type OrderLineItem = {
   name: string
@@ -583,8 +622,9 @@ const mapRemoteOrder = (item: OrderItem): OrderRow => {
   }
 }
 
-onMounted(async () => {
+const loadOrders = async () => {
   if (!USE_REMOTE) return
+  tableLoading.value = true
   try {
     const res = await fetchOrders({
       orderId: filters.orderId,
@@ -600,10 +640,12 @@ onMounted(async () => {
       pageSize: pagination.pageSize,
     })
     orders.splice(0, orders.length, ...res.list.map(mapRemoteOrder))
-  } catch (error) {
+  } catch {
     message.error('订单列表加载失败，请检查接口配置')
+  } finally {
+    tableLoading.value = false
   }
-})
+}
 
 const statusOptions = [
   { label: '待付款', value: '待付款' },
@@ -638,16 +680,26 @@ const tabKeys = [
   { key: '换货售后订单', label: '换货售后订单' },
 ]
 
-const filters = usePersistedFilters('filters:orders', {
-  orderId: '',
-  orderCode: '',
-  productName: '',
-  phone: '',
-  statuses: [] as string[],
-  orderRange: [] as string[],
-  payRange: [] as string[],
-  activeTab: 'all',
+const { filters, pagination, bindScrollContainer } = useListPageState('list:orders', {
+  filters: {
+    orderId: '',
+    orderCode: '',
+    productName: '',
+    phone: '',
+    statuses: [] as string[],
+    orderRange: [] as string[],
+    payRange: [] as string[],
+    activeTab: 'all',
+  },
+  pagination: {
+    current: 1,
+    pageSize: 8,
+  },
 })
+
+if (!Array.isArray(filters.statuses)) {
+  filters.statuses = []
+}
 
 const activeTab = computed({
   get: () => filters.activeTab,
@@ -708,7 +760,8 @@ const filteredOrders = computed(() => {
   return orders.filter((item) => {
     const matchOrderId = !keyword || item.id.includes(keyword)
     const matchCode = !filters.orderCode || item.orderCode.includes(filters.orderCode.trim())
-    const matchProduct = !filters.productName || item.productName.includes(filters.productName.trim())
+    const matchProduct =
+      !filters.productName || item.productName.includes(filters.productName.trim())
     const matchPhone = !filters.phone || item.phone.includes(filters.phone.trim())
     const matchStatus = filters.statuses.length === 0 || filters.statuses.includes(item.status)
     const matchTab =
@@ -722,21 +775,50 @@ const filteredOrders = computed(() => {
     const matchPayDate =
       filters.payRange.length === 0 ||
       dayjs(item.payTime).isBetween(filters.payRange[0], filters.payRange[1], 'day', '[]')
-    return matchOrderId && matchCode && matchProduct && matchPhone && matchStatus && matchTab && matchOrderDate && matchPayDate
+    return (
+      matchOrderId &&
+      matchCode &&
+      matchProduct &&
+      matchPhone &&
+      matchStatus &&
+      matchTab &&
+      matchOrderDate &&
+      matchPayDate
+    )
   })
 })
-
-const pagination = usePersistedFilters('pagination:orders', { current: 1, pageSize: 4 })
 
 const pagedOrders = computed(() => {
   const start = (pagination.current - 1) * pagination.pageSize
   return filteredOrders.value.slice(start, start + pagination.pageSize)
 })
 
+watch(
+  () => filteredOrders.value.length,
+  (total) => {
+    const max = Math.max(1, Math.ceil(total / pagination.pageSize))
+    if (pagination.current > max) pagination.current = max
+  },
+  { immediate: true }
+)
+
+const tablePagination = computed(() => ({
+  current: pagination.current,
+  pageSize: pagination.pageSize,
+  total: filteredOrders.value.length,
+  showSizeChanger: true,
+  pageSizeOptions: ['8', '20', '50'],
+  onChange: (page: number, pageSize: number) => {
+    pagination.current = page
+    pagination.pageSize = pageSize
+  },
+}))
+
 const getOrderStatusMeta = (status: string) =>
   orderStatusConfig[status] ?? { label: status, color: 'default' }
 
-const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission)
+const isActionAllowed = (action: ActionDef) =>
+  !action.permission || hasPermission(action.permission)
 
 const getOrderActions = (record: { status: string }) => {
   const keys = orderStatusActions[record.status] ?? ['view']
@@ -769,6 +851,7 @@ const resetFilters = () => {
 
 const onTabChange = () => {
   filters.statuses = []
+  pagination.current = 1
 }
 
 const exportOrders = (status?: string) => {
@@ -799,6 +882,11 @@ const preventUpload = () => false
 
 const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
 
+onMounted(() => {
+  scrollContainerRef.value = document.querySelector('.layout-content') as HTMLElement | null
+  bindScrollContainer(scrollContainerRef)
+  void loadOrders()
+})
 </script>
 
 <style scoped>
@@ -821,7 +909,7 @@ const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || docum
 
 .amount-main {
   font-weight: 700;
-  color: #ef4444;
+  color: var(--danger-color);
 }
 
 .amount-sub {
@@ -839,7 +927,7 @@ const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || docum
 }
 
 .expand-panel {
-  background: #f8fafc;
+  background: var(--surface-2);
   border-radius: 12px;
   padding: 12px 16px;
   display: grid;
@@ -957,7 +1045,7 @@ const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || docum
 }
 
 :deep(.row-after-sale td) {
-  background: rgba(239, 68, 68, 0.08) !important;
+  background: var(--danger-bg) !important;
 }
 
 .mobile-card {

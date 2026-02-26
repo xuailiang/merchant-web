@@ -24,7 +24,9 @@
             >
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'level'">
-                  <a-tag :color="record.stock <= warningThreshold / 2 ? 'red' : 'orange'">{{ record.level }}</a-tag>
+                  <a-tag :color="record.stock <= warningThreshold / 2 ? 'red' : 'orange'">{{
+                    record.level
+                  }}</a-tag>
                 </template>
                 <template v-else-if="column.key === 'action'">
                   <a-space>
@@ -39,7 +41,7 @@
       </a-row>
     </a-card>
 
-    <TableWrapper>
+    <TableWrapper :loading="tableLoading" :skeleton-mode="viewMode === 'card' ? 'card' : 'table'">
       <template #filters>
         <a-tabs v-model:activeKey="activeTab" class="product-tabs">
           <a-tab-pane key="all" :tab="`全部商品(${products.length})`" />
@@ -54,7 +56,12 @@
             <a-input v-model:value="filters.code" placeholder="请输入商品编码" allow-clear />
           </a-form-item>
           <a-form-item label="商品分类">
-            <a-select v-model:value="filters.category" :options="categoryOptions" allow-clear placeholder="请选择" />
+            <a-select
+              v-model:value="filters.category"
+              :options="categoryOptions"
+              allow-clear
+              placeholder="请选择"
+            />
           </a-form-item>
           <a-form-item label="品牌名称">
             <a-input v-model:value="filters.brand" placeholder="请输入品牌名称" allow-clear />
@@ -91,11 +98,21 @@
 
       <template #actions>
         <a-space class="batch-actions" wrap>
-          <a-button v-if="hasPermission('products:create')" type="primary" @click="goCreate">新增商品</a-button>
-          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('up')">批量上架</a-button>
-          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('down')">批量下架</a-button>
-          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('stock')">批量增加库存</a-button>
-          <a-button v-if="hasPermission('products:delete')" danger @click="runBatchAction('delete')">批量删除</a-button>
+          <a-button v-if="hasPermission('products:create')" type="primary" @click="goCreate"
+            >新增商品</a-button
+          >
+          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('up')"
+            >批量上架</a-button
+          >
+          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('down')"
+            >批量下架</a-button
+          >
+          <a-button v-if="hasPermission('products:batch')" @click="runBatchAction('stock')"
+            >批量增加库存</a-button
+          >
+          <a-button v-if="hasPermission('products:delete')" danger @click="runBatchAction('delete')"
+            >批量删除</a-button
+          >
           <a-button v-if="hasPermission('products:export')" type="dashed">导出数据</a-button>
           <a-button @click="toggleView">
             {{ viewMode === 'table' ? '卡片展示' : '表格展示' }}
@@ -105,7 +122,12 @@
       </template>
 
       <template v-if="activeTab === 'draft'">
-        <a-table :columns="draftColumns" :data-source="drafts" :pagination="{ pageSize: 6 }" :scroll="{ x: 1000 }">
+        <a-table
+          :columns="draftColumns"
+          :data-source="drafts"
+          :pagination="{ pageSize: 6 }"
+          :scroll="{ x: 1000 }"
+        >
           <template #bodyCell="{ column, record }">
             <template v-if="column.key === 'info'">
               <div class="product-info">
@@ -125,7 +147,9 @@
               <div v-else class="draft-skeleton-line"></div>
             </template>
             <template v-else-if="column.key === 'stock'">
-              <div v-if="record.stock !== null && record.stock !== undefined">{{ record.stock }}</div>
+              <div v-if="record.stock !== null && record.stock !== undefined">
+                {{ record.stock }}
+              </div>
               <div v-else class="draft-skeleton-line"></div>
             </template>
             <template v-else-if="column.key === 'status'">
@@ -163,12 +187,18 @@
                 </div>
                 <div class="mobile-row">
                   <span class="mobile-label">状态</span>
-                  <a-tag :color="getProductStatusMeta(item.status).color">{{ getProductStatusMeta(item.status).label }}</a-tag>
+                  <a-tag :color="getProductStatusMeta(item.status).color">{{
+                    getProductStatusMeta(item.status).label
+                  }}</a-tag>
                 </div>
                 <div class="mobile-actions">
                   <template v-for="action in getProductPrimaryActions(item)" :key="action.key">
-                    <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{ action.label }}</RouterLink>
-                    <a-button v-else-if="isActionAllowed(action)" type="link">{{ action.label }}</a-button>
+                    <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{
+                      action.label
+                    }}</RouterLink>
+                    <a-button v-else-if="isActionAllowed(action)" type="link">{{
+                      action.label
+                    }}</a-button>
                   </template>
                 </div>
               </a-card>
@@ -211,15 +241,26 @@
                 </div>
                 <div class="card-stock">
                   <span>库存：{{ item.stock }}</span>
-                  <a-progress :percent="Math.min(100, (item.stock / 300) * 100)" size="small" :show-info="false" />
+                  <a-progress
+                    :percent="Math.min(100, (item.stock / 300) * 100)"
+                    size="small"
+                    :show-info="false"
+                  />
                 </div>
                 <div class="card-meta">
                   <span>更新：{{ item.updatedAt }}</span>
                 </div>
                 <div class="card-actions">
                   <template v-for="action in getProductPrimaryActions(item)" :key="action.key">
-                    <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{ action.label }}</RouterLink>
-                    <a-button v-else-if="isActionAllowed(action)" type="link" :danger="action.danger">{{ action.label }}</a-button>
+                    <RouterLink v-if="action.to && isActionAllowed(action)" :to="action.to(item)">{{
+                      action.label
+                    }}</RouterLink>
+                    <a-button
+                      v-else-if="isActionAllowed(action)"
+                      type="link"
+                      :danger="action.danger"
+                      >{{ action.label }}</a-button
+                    >
                   </template>
                   <a-dropdown
                     v-if="getProductMoreActions(item).length"
@@ -246,10 +287,9 @@
         v-else
         :columns="columns"
         :data-source="filteredProducts"
-        :pagination="{ pageSize: 6 }"
+        :pagination="tablePagination"
         :scroll="{ x: 1300 }"
         class="products-table"
-        :loading="tableLoading"
         :locale="{ emptyText: h(TableEmpty, { description: '暂无商品数据' }) }"
         :row-selection="rowSelection"
       >
@@ -283,7 +323,9 @@
             <div class="product-meta">店铺：{{ record.shop }}</div>
           </template>
           <template v-else-if="column.key === 'status'">
-            <a-tag :color="getProductStatusMeta(record.status).color">{{ getProductStatusMeta(record.status).label }}</a-tag>
+            <a-tag :color="getProductStatusMeta(record.status).color">{{
+              getProductStatusMeta(record.status).label
+            }}</a-tag>
           </template>
           <template v-else-if="column.key === 'time'">
             <div class="product-meta">更新：{{ record.updatedAt }}</div>
@@ -292,9 +334,12 @@
           <template v-else-if="column.key === 'action'">
             <div class="actions">
               <template v-for="action in getProductPrimaryActions(record)" :key="action.key">
-                <RouterLink v-if="action.to && isActionAllowed(action)" class="action-link" :to="action.to(record)">{{
-                  action.label
-                }}</RouterLink>
+                <RouterLink
+                  v-if="action.to && isActionAllowed(action)"
+                  class="action-link"
+                  :to="action.to(record)"
+                  >{{ action.label }}</RouterLink
+                >
                 <a-button
                   v-else-if="isActionAllowed(action)"
                   size="small"
@@ -328,7 +373,7 @@ import TableWrapper from '../components/TableWrapper.vue'
 import ColumnSetting from '../components/ColumnSetting.vue'
 import TableEmpty from '../components/TableEmpty.vue'
 import { useIsMobile } from '../utils/useIsMobile'
-import { usePersistedFilters } from '../utils/usePersistedFilters'
+import { useListPageState } from '../utils/useListPageState'
 import { hasPermission } from '../utils/permissions'
 import { fetchProducts } from '../api/endpoints'
 import { message, Modal, notification } from 'ant-design-vue'
@@ -344,7 +389,16 @@ const isMobile = useIsMobile()
 const router = useRouter()
 const activeTab = ref('all')
 const viewMode = ref<'table' | 'card'>('table')
-const drafts = ref<Array<{ id: string; title: string; updatedAt: string; image?: string; price?: number | null; stock?: number | null }>>([])
+const drafts = ref<
+  Array<{
+    id: string
+    title: string
+    updatedAt: string
+    image?: string
+    price?: number | null
+    stock?: number | null
+  }>
+>([])
 const DRAFT_KEY = 'product-drafts'
 const warningThreshold = ref(30)
 const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
@@ -359,8 +413,13 @@ const allColumns = [
   { title: '操作', key: 'action', width: 200 },
 ]
 
-const { visibleKeys, filteredColumns: columns, reset } = useColumnConfig('columns:products', allColumns)
+const {
+  visibleKeys,
+  filteredColumns: columns,
+  reset,
+} = useColumnConfig('columns:products', allColumns)
 const tableLoading = ref(false)
+const scrollContainerRef = ref<HTMLElement | null>(null)
 
 const products = ref([
   {
@@ -469,8 +528,9 @@ const products = ref([
 
 const USE_REMOTE = false
 
-onMounted(async () => {
+const loadProducts = async () => {
   if (!USE_REMOTE) return
+  tableLoading.value = true
   try {
     const res = await fetchProducts({
       name: filters.name,
@@ -488,10 +548,12 @@ onMounted(async () => {
       pageSize: pagination.pageSize,
     })
     products.value = res.list as typeof products.value
-  } catch (error) {
+  } catch {
     message.error('商品列表加载失败，请检查接口配置')
+  } finally {
+    tableLoading.value = false
   }
-})
+}
 
 const warningColumns = [
   { title: '商品', dataIndex: 'name', key: 'name' },
@@ -511,17 +573,23 @@ const warningList = computed(() => {
     }))
 })
 
-const filters = usePersistedFilters('filters:products', {
-  name: '',
-  code: '',
-  category: '',
-  brand: '',
-  statuses: [] as string[],
-  dateRange: [] as string[],
-  priceMin: null as number | null,
-  priceMax: null as number | null,
-  stockMin: null as number | null,
-  stockMax: null as number | null,
+const { filters, pagination, bindScrollContainer } = useListPageState('list:products', {
+  filters: {
+    name: '',
+    code: '',
+    category: '',
+    brand: '',
+    statuses: [] as string[],
+    dateRange: [] as string[],
+    priceMin: null as number | null,
+    priceMax: null as number | null,
+    stockMin: null as number | null,
+    stockMax: null as number | null,
+  },
+  pagination: {
+    current: 1,
+    pageSize: 20,
+  },
 })
 
 if (!Array.isArray(filters.statuses)) {
@@ -546,7 +614,8 @@ const categoryOptions = [
 const getProductStatusMeta = (status: string) =>
   productStatusConfig[status] ?? { label: status, color: 'default' }
 
-const isActionAllowed = (action: ActionDef) => !action.permission || hasPermission(action.permission as any)
+const isActionAllowed = (action: ActionDef) =>
+  !action.permission || hasPermission(action.permission as any)
 
 const getProductActions = (record: { status: string }) => {
   const keys = productStatusActions[record.status] ?? productStatusActions['上架中']
@@ -577,10 +646,7 @@ const rangeValue = computed({
       filters.dateRange = []
       return
     }
-    filters.dateRange = [
-      value[0].format('YYYY-MM-DD'),
-      value[1].format('YYYY-MM-DD'),
-    ]
+    filters.dateRange = [value[0].format('YYYY-MM-DD'), value[1].format('YYYY-MM-DD')]
   },
 })
 
@@ -599,12 +665,7 @@ const filteredProducts = computed(() => {
       (filters.stockMax === null || item.stock <= filters.stockMax)
     const matchDate =
       filters.dateRange.length === 0 ||
-      dayjs(item.listedAt).isBetween(
-        filters.dateRange[0],
-        filters.dateRange[1],
-        'day',
-        '[]'
-      )
+      dayjs(item.listedAt).isBetween(filters.dateRange[0], filters.dateRange[1], 'day', '[]')
     return (
       matchName &&
       matchCode &&
@@ -618,12 +679,31 @@ const filteredProducts = computed(() => {
   })
 })
 
-const pagination = usePersistedFilters('pagination:products', { current: 1, pageSize: 20 })
-
 const pagedProducts = computed(() => {
   const start = (pagination.current - 1) * pagination.pageSize
   return filteredProducts.value.slice(start, start + pagination.pageSize)
 })
+
+watch(
+  () => filteredProducts.value.length,
+  (total) => {
+    const max = Math.max(1, Math.ceil(total / pagination.pageSize))
+    if (pagination.current > max) pagination.current = max
+  },
+  { immediate: true }
+)
+
+const tablePagination = computed(() => ({
+  current: pagination.current,
+  pageSize: pagination.pageSize,
+  total: filteredProducts.value.length,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50'],
+  onChange: (page: number, pageSize: number) => {
+    pagination.current = page
+    pagination.pageSize = pageSize
+  },
+}))
 
 const selectedRowKeys = ref<string[]>([])
 const selectedRows = ref<any[]>([])
@@ -752,9 +832,15 @@ const draftColumns = [
   { title: '操作', key: 'action', width: 160 },
 ]
 
-onMounted(loadDrafts)
+onMounted(() => {
+  scrollContainerRef.value = document.querySelector('.layout-content') as HTMLElement | null
+  bindScrollContainer(scrollContainerRef)
+  loadDrafts()
+  void loadProducts()
+})
 
 watch(activeTab, (value) => {
+  pagination.current = 1
   if (value === 'draft') loadDrafts()
 })
 </script>
@@ -821,7 +907,7 @@ watch(activeTab, (value) => {
 }
 
 .warning-card {
-  background: #f8fafc;
+  background: var(--surface-2);
   border: 1px solid var(--border-color);
 }
 
@@ -906,7 +992,7 @@ watch(activeTab, (value) => {
 
 .price-stack {
   font-weight: 600;
-  color: #ef4444;
+  color: var(--danger-color);
 }
 
 .card-grid {
@@ -967,7 +1053,7 @@ watch(activeTab, (value) => {
 }
 
 .price-main {
-  color: #ef4444;
+  color: var(--danger-color);
   font-weight: 700;
   font-size: 18px;
 }

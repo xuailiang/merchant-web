@@ -1,11 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>商户管理后台</title>
+    <style>
+      #app-loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 12px;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+        color: #334155;
+        z-index: 9999;
+      }
+
+      #app-loading .loader-ring {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 3px solid rgba(31, 111, 235, 0.15);
+        border-top-color: #1f6feb;
+        animation: app-spin 0.9s linear infinite;
+      }
+
+      #app-loading .loader-text {
+        font-size: 13px;
+        letter-spacing: 0.3px;
+      }
+
+      @keyframes app-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="app-loading">
+      <div class="loader-ring"></div>
+      <div class="loader-text">系统加载中...</div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
