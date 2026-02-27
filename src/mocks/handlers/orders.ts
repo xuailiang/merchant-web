@@ -128,6 +128,8 @@ const orders: OrderItem[] = [
   },
 ]
 
+const viewPresets: Array<{ id: string; name: string; filters: Record<string, unknown> }> = []
+
 const afterSales: AfterSalesItem[] = [
   {
     id: 'AS20260204001',
@@ -199,6 +201,17 @@ const settlementDetails: SettlementDetail[] = [
 ]
 
 export const orderHandlers = [
+  http.get('*/orders/summary', () =>
+    ok({
+      waitShipUrgent: 18,
+      refundPending: 6,
+      abnormalLogistics: 4,
+      highValuePending: 12,
+      todayShipRate: 92.4,
+      todayRefundRate: 2.1,
+    })
+  ),
+
   http.get('*/orders', ({ request }) => {
     const url = new URL(request.url)
     const orderId = (url.searchParams.get('orderId') || '').trim()
@@ -234,6 +247,20 @@ export const orderHandlers = [
     })
 
     return ok(withPagination(filtered, page, pageSize))
+  }),
+
+  http.post('*/orders/view-presets', async ({ request }) => {
+    const payload = (await request.json()) as {
+      name?: string
+      filters?: Record<string, unknown>
+    }
+    const preset = {
+      id: `preset_${Date.now()}`,
+      name: payload.name || '自定义视图',
+      filters: payload.filters || {},
+    }
+    viewPresets.unshift(preset)
+    return ok(preset)
   }),
 
   http.get('*/after-sales', ({ request }) => {

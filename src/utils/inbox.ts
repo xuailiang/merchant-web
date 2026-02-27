@@ -1,3 +1,14 @@
+import {
+  addMessageRecord,
+  getMessageCenterStore,
+  markMessagesRead,
+  removeMessageRecords,
+  retryMessages,
+  sortMessages,
+  updateMessageCenterStore,
+} from './messageCenter'
+import type { MessageRecord } from '../types/message-center'
+
 export type InboxType = '交易' | '系统' | '营销' | '审批'
 
 export type InboxItem = {
@@ -12,71 +23,60 @@ export type InboxItem = {
   checked?: boolean
 }
 
-const STORAGE_KEY = 'inbox-messages'
+const CHECKED_KEY = 'inbox-checked-map'
 
-const DEFAULT_MESSAGES: InboxItem[] = [
-  {
-    id: 'm1',
-    title: '订单待发货提醒',
-    desc: '有 12 笔订单待处理',
-    time: '10:15',
-    type: '交易',
-    unread: true,
-    priority: '高',
-    route: '/orders?status=待发货',
-  },
-  {
-    id: 'm2',
-    title: '库存预警',
-    desc: '3 个商品库存不足',
-    time: '09:42',
-    type: '系统',
-    unread: true,
-    priority: '中',
-    route: '/products',
-  },
-  {
-    id: 'm3',
-    title: '营销活动即将开始',
-    desc: '情人节礼盒专区明日上线',
-    time: '昨日',
-    type: '营销',
-    unread: false,
-    priority: '低',
-    route: '/marketing',
-  },
-  {
-    id: 'm4',
-    title: '商户资质待审核',
-    desc: '新增品牌授权待确认',
-    time: '昨日',
-    type: '审批',
-    unread: true,
-    priority: '高',
-    route: '/products/brands',
-  },
-]
-
-const notify = () => {
-  window.dispatchEvent(new CustomEvent('inbox-update'))
+const readCheckedMap = (): Record<string, boolean> => {
+  const raw = localStorage.getItem(CHECKED_KEY)
+  if (!raw) return {}
+  try {
+    return JSON.parse(raw) as Record<string, boolean>
+  } catch {
+    return {}
+  }
 }
 
+const writeCheckedMap = (map: Record<string, boolean>) => {
+  localStorage.setItem(CHECKED_KEY, JSON.stringify(map))
+}
+
+const toInboxItem = (record: MessageRecord, checkedMap: Record<string, boolean>): InboxItem => ({
+  id: record.id,
+  title: record.title,
+  desc: record.content,
+  time: record.sentAt || record.createdAt,
+  type: record.type,
+  unread: record.status !== 'read',
+  priority: record.priority,
+  route: record.route,
+  checked: !!checkedMap[record.id],
+})
+
 export const getInboxMessages = (): InboxItem[] => {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MESSAGES))
-    return [...DEFAULT_MESSAGES]
-  }
-  try {
-    return JSON.parse(raw) as InboxItem[]
-  } catch {
-    return [...DEFAULT_MESSAGES]
-  }
+  const checkedMap = readCheckedMap()
+  const records = sortMessages(getMessageCenterStore().records)
+  return records.map((record) => toInboxItem(record, checkedMap))
+}
+
+const syncCheckedMap = (items: InboxItem[]) => {
+  const nextMap: Record<string, boolean> = {}
+  items.forEach((item) => {
+    if (item.checked) nextMap[item.id] = true
+  })
+  writeCheckedMap(nextMap)
 }
 
 export const setInboxMessages = (messages: InboxItem[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
-  notify()
+  const before = getInboxMessages()
+  const beforeIds = new Set(before.map((item) => item.id))
+  const afterIds = new Set(messages.map((item) => item.id))
+  const removedIds = [...beforeIds].filter((id) => !afterIds.has(id))
+  if (removedIds.length > 0) removeMessageRecords(removedIds)
+
+  const markedReadIds = messages.filter((item) => !item.unread).map((item) => item.id)
+  if (markedReadIds.length > 0) markMessagesRead(markedReadIds)
+
+  syncCheckedMap(messages)
+  window.dispatchEvent(new CustomEvent('inbox-update'))
 }
 
 export const updateInboxMessages = (updater: (items: InboxItem[]) => InboxItem[]) => {
@@ -85,5 +85,22 @@ export const updateInboxMessages = (updater: (items: InboxItem[]) => InboxItem[]
 }
 
 export const addInboxMessage = (item: InboxItem) => {
-  updateInboxMessages((items) => [item, ...items])
+  addMessageRecord({
+    id: item.id,
+    title: item.title,
+    content: item.desc,
+    type: item.type,
+    priority: item.priority,
+    route: item.route,
+    status: item.unread ? 'success' : 'read',
+  })
+}
+
+export const retryInboxMessages = (ids: string[]) => {
+  retryMessages(ids)
+}
+
+export const clearInboxChecked = () => {
+  writeCheckedMap({})
+  updateMessageCenterStore((store) => ({ ...store }))
 }

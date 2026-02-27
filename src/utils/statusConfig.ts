@@ -26,21 +26,46 @@ export const orderStatusConfig: Record<string, StatusMeta> = {
 
 export const orderActionConfig: Record<string, ActionDef> = {
   view: { key: 'view', label: '查看', permission: 'orders:view', to: (r) => `/orders/${r.id}` },
-  ship: { key: 'ship', label: '发货', permission: 'orders:ship', to: (r) => `/orders/ship/${r.id}` },
+  ship: {
+    key: 'ship',
+    label: '发货',
+    permission: 'orders:ship',
+    to: (r) => `/orders/ship/${r.id}`,
+  },
+  remindPay: { key: 'remindPay', label: '催付', permission: 'orders:view' },
+  logistics: { key: 'logistics', label: '查看物流', permission: 'orders:view' },
   note: { key: 'note', label: '修改备注', permission: 'orders:view' },
   adjust: { key: 'adjust', label: '调整金额', permission: 'orders:view' },
   afterSale: { key: 'afterSale', label: '售后处理', permission: 'orders:view' },
 }
 
 export const orderStatusActions: Record<string, string[]> = {
-  待支付: ['view', 'note'],
+  待支付: ['view', 'remindPay', 'note'],
   待发货: ['view', 'ship', 'note', 'adjust'],
-  待收货: ['view', 'note'],
+  待收货: ['view', 'logistics', 'note'],
   交易完成: ['view', 'afterSale'],
   取消: ['view'],
   退款完成: ['view'],
   退款审核中: ['view', 'afterSale'],
   交易关闭: ['view'],
+}
+
+export const orderRiskActionPriority: Record<string, string[]> = {
+  超时风险: ['ship', 'view', 'note', 'adjust'],
+  售后中: ['afterSale', 'view', 'note'],
+  低毛利: ['adjust', 'view', 'note'],
+  物流异常: ['view', 'note'],
+}
+
+export const applyOrderRiskPriority = (actionKeys: string[], riskFlags: string[] = []) => {
+  const keySet = new Set(actionKeys)
+  const pinned: string[] = []
+  riskFlags.forEach((risk) => {
+    ;(orderRiskActionPriority[risk] ?? []).forEach((key) => {
+      if (keySet.has(key) && !pinned.includes(key)) pinned.push(key)
+    })
+  })
+  return [...pinned, ...actionKeys.filter((key) => !pinned.includes(key))]
 }
 
 export const productStatusConfig: Record<string, StatusMeta> = {
@@ -50,7 +75,12 @@ export const productStatusConfig: Record<string, StatusMeta> = {
 }
 
 export const productActionConfig: Record<string, ActionDef> = {
-  view: { key: 'view', label: '查看', permission: 'products:view', to: (r) => `/products/${r.key}` },
+  view: {
+    key: 'view',
+    label: '查看',
+    permission: 'products:view',
+    to: (r) => `/products/${r.key}`,
+  },
   edit: { key: 'edit', label: '编辑', permission: 'products:edit' },
   quickEdit: { key: 'quickEdit', label: '快速编辑', permission: 'products:edit' },
   down: { key: 'down', label: '下架', permission: 'products:delete', danger: true },

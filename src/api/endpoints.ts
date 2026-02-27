@@ -80,6 +80,24 @@ export type OrderItem = {
   phone: string
   note: string
   settlement: string
+  buyerTier?: '普通' | '会员' | 'VIP'
+  region?: string
+  warehouse?: string
+  slaDeadline?: string
+  slaMinutesLeft?: number
+  estimatedProfit?: number
+  estimatedMargin?: number
+  packageCount?: number
+  latestLogisticsAt?: string
+  riskFlags?: string[]
+  paymentChannel?: '微信支付' | '支付宝' | '银行卡' | '未支付'
+  packages?: Array<{
+    id: string
+    carrier: string
+    tracking: string
+    status: string
+    updatedAt: string
+  }>
   items: Array<{
     name: string
     spec: string
@@ -88,6 +106,21 @@ export type OrderItem = {
     price: string
     qty: number
   }>
+}
+
+export type OrderSummaryDto = {
+  waitShipUrgent: number
+  refundPending: number
+  abnormalLogistics: number
+  highValuePending: number
+  todayShipRate: number
+  todayRefundRate: number
+}
+
+export type OrderViewPresetDto = {
+  id: string
+  name: string
+  filters: Record<string, string | string[]>
 }
 
 export type AfterSalesItem = {
@@ -261,6 +294,14 @@ export const fetchOrders = (params: {
   })
   return request<PagedResult<OrderItem>>(`/orders?${query.toString()}`)
 }
+
+export const fetchOrderSummary = () => request<OrderSummaryDto>('/orders/summary')
+
+export const saveOrderViewPreset = (payload: { name: string; filters: Record<string, unknown> }) =>
+  request<OrderViewPresetDto>('/orders/view-presets', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 
 export const fetchAfterSales = (params: {
   keyword?: string

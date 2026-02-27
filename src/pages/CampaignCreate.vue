@@ -25,7 +25,11 @@
               </a-col>
               <a-col :xs="24" :lg="12">
                 <a-form-item label="活动类型">
-                  <a-select v-model:value="form.type" :options="typeOptions" :get-popup-container="getPopupContainer" />
+                  <a-select
+                    v-model:value="form.type"
+                    :options="typeOptions"
+                    :get-popup-container="getPopupContainer"
+                  />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :lg="8">
@@ -40,7 +44,11 @@
               </a-col>
               <a-col :xs="24" :lg="8">
                 <a-form-item label="活动渠道">
-                  <a-select v-model:value="form.channel" :options="channelOptions" :get-popup-container="getPopupContainer" />
+                  <a-select
+                    v-model:value="form.channel"
+                    :options="channelOptions"
+                    :get-popup-container="getPopupContainer"
+                  />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :lg="8">
@@ -50,7 +58,11 @@
               </a-col>
               <a-col :xs="24">
                 <a-form-item label="活动说明">
-                  <a-textarea v-model:value="form.description" :rows="3" placeholder="简要描述活动亮点" />
+                  <a-textarea
+                    v-model:value="form.description"
+                    :rows="3"
+                    placeholder="简要描述活动亮点"
+                  />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -90,12 +102,21 @@
               </a-col>
               <a-col v-if="form.type === '会员专享'" :xs="24" :lg="8">
                 <a-form-item label="会员等级">
-                  <a-select v-model:value="form.memberLevel" :options="memberOptions" :get-popup-container="getPopupContainer" />
+                  <a-select
+                    v-model:value="form.memberLevel"
+                    :options="memberOptions"
+                    :get-popup-container="getPopupContainer"
+                  />
                 </a-form-item>
               </a-col>
               <a-col v-if="form.type === '组合优惠'" :xs="24" :lg="8">
                 <a-form-item label="组合折扣">
-                  <a-input-number v-model:value="form.bundleRate" :min="1" :max="99" style="width: 100%" />
+                  <a-input-number
+                    v-model:value="form.bundleRate"
+                    :min="1"
+                    :max="99"
+                    style="width: 100%"
+                  />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :lg="8">
@@ -118,7 +139,11 @@
             <a-row :gutter="16">
               <a-col :xs="24" :lg="12">
                 <a-form-item label="活动时间">
-                  <a-range-picker v-model:value="form.dateRange" style="width: 100%" :get-popup-container="getPopupContainer" />
+                  <a-range-picker
+                    v-model:value="form.dateRange"
+                    style="width: 100%"
+                    :get-popup-container="getPopupContainer"
+                  />
                 </a-form-item>
               </a-col>
               <a-col :xs="24" :lg="12">
@@ -132,7 +157,11 @@
               </a-col>
               <a-col v-if="form.scope === '指定分类'" :xs="24" :lg="12">
                 <a-form-item label="选择分类">
-                  <a-select v-model:value="form.categories" mode="multiple" placeholder="请选择分类">
+                  <a-select
+                    v-model:value="form.categories"
+                    mode="multiple"
+                    placeholder="请选择分类"
+                  >
                     <a-select-option value="宠物生活">宠物生活</a-select-option>
                     <a-select-option value="数码电器">数码电器</a-select-option>
                     <a-select-option value="家居家装">家居家装</a-select-option>
@@ -193,7 +222,7 @@ const form = reactive({
   type: '秒杀活动',
   tags: ['限时'],
   channel: '线上活动',
-  owner: '徐大大',
+  owner: '余心几',
   description: '',
   flashPrice: 99,
   flashLimit: 1,

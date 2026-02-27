@@ -1,46 +1,16 @@
-export type MessageType = '交易' | '系统' | '营销' | '审批'
-export type DeliveryStatus = 'queued' | 'sending' | 'success' | 'failed' | 'read'
-
-export type MessageTemplate = {
-  id: string
-  name: string
-  type: MessageType
-  titleTemplate: string
-  contentTemplate: string
-  enabled: boolean
-  maxRetry: number
-  createdAt: string
-}
-
-export type SubscriptionRule = {
-  id: string
-  name: string
-  eventCode: string
-  type: MessageType
-  targetRole: 'admin' | 'operator' | 'finance' | 'all'
-  enabled: boolean
-  throttleMinutes: number
-  createdAt: string
-}
-
-export type MessageRecord = {
-  id: string
-  type: MessageType
-  priority: '高' | '中' | '低'
-  title: string
-  content: string
-  status: DeliveryStatus
-  retryCount: number
-  maxRetry: number
-  lastError?: string
-  recipient: string
-  route?: string
-  templateId?: string
-  bizNo?: string
-  createdAt: string
-  sentAt?: string
-  readAt?: string
-}
+import dayjs from 'dayjs'
+import type {
+  MessageBatchAction,
+  MessageCenterStats,
+  MessageDeliveryStatus,
+  MessageGroup,
+  MessageGroupKey,
+  MessageRecord,
+  MessageTemplate,
+  MessageType,
+  MessageViewFilter,
+  SubscriptionRule,
+} from '../types/message-center'
 
 type MessageStore = {
   templates: MessageTemplate[]
@@ -93,6 +63,8 @@ const DEFAULT_STORE: MessageStore = {
       enabled: true,
       throttleMinutes: 30,
       createdAt: '2026-02-27 09:30:00',
+      hitEstimate24h: 18,
+      lastTriggeredAt: '2026-02-27 13:10:00',
     },
     {
       id: 'rule-2',
@@ -103,6 +75,8 @@ const DEFAULT_STORE: MessageStore = {
       enabled: true,
       throttleMinutes: 5,
       createdAt: '2026-02-27 09:32:00',
+      hitEstimate24h: 7,
+      lastTriggeredAt: '2026-02-27 12:31:00',
     },
     {
       id: 'rule-3',
@@ -113,6 +87,8 @@ const DEFAULT_STORE: MessageStore = {
       enabled: true,
       throttleMinutes: 60,
       createdAt: '2026-02-27 09:33:00',
+      hitEstimate24h: 3,
+      lastTriggeredAt: '2026-02-27 11:50:00',
     },
   ],
   records: [
@@ -170,10 +146,17 @@ const DEFAULT_STORE: MessageStore = {
 
 const notify = () => {
   window.dispatchEvent(new CustomEvent('message-center-update'))
+  window.dispatchEvent(new CustomEvent('inbox-update'))
 }
 
 const cloneStore = (store: MessageStore): MessageStore =>
   JSON.parse(JSON.stringify(store)) as MessageStore
+
+const sanitizeStore = (store: MessageStore): MessageStore => ({
+  templates: Array.isArray(store.templates) ? store.templates : [],
+  rules: Array.isArray(store.rules) ? store.rules : [],
+  records: Array.isArray(store.records) ? store.records : [],
+})
 
 const readStore = (): MessageStore => {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -182,12 +165,7 @@ const readStore = (): MessageStore => {
     return cloneStore(DEFAULT_STORE)
   }
   try {
-    const parsed = JSON.parse(raw) as MessageStore
-    return {
-      templates: Array.isArray(parsed.templates) ? parsed.templates : [],
-      rules: Array.isArray(parsed.rules) ? parsed.rules : [],
-      records: Array.isArray(parsed.records) ? parsed.records : [],
-    }
+    return sanitizeStore(JSON.parse(raw) as MessageStore)
   } catch {
     return cloneStore(DEFAULT_STORE)
   }
@@ -202,16 +180,140 @@ export const getMessageCenterStore = (): MessageStore => readStore()
 
 export const updateMessageCenterStore = (updater: (store: MessageStore) => MessageStore) => {
   const next = updater(readStore())
-  writeStore(next)
+  writeStore(sanitizeStore(next))
+}
+
+export const getMessageCenterStats = (
+  records: MessageRecord[] = getMessageCenterStore().records
+): MessageCenterStats => {
+  const total = records.length
+  const read = records.filter((item) => item.status === 'read').length
+  const failed = records.filter((item) => item.status === 'failed').length
+  const unread = total - read
+  const highPriority = records.filter((item) => item.priority === '高').length
+  const readRate = total ? Math.round((read / total) * 100) : 0
+  return { total, read, unread, failed, highPriority, readRate }
+}
+
+const priorityWeight: Record<MessageRecord['priority'], number> = {
+  高: 3,
+  中: 2,
+  低: 1,
+}
+
+const statusWeight: Record<MessageDeliveryStatus, number> = {
+  failed: 3,
+  queued: 2,
+  sending: 2,
+  success: 1,
+  read: 0,
+}
+
+export const sortMessages = (records: MessageRecord[]): MessageRecord[] =>
+  [...records].sort((a, b) => {
+    const priorityDiff = priorityWeight[b.priority] - priorityWeight[a.priority]
+    if (priorityDiff !== 0) return priorityDiff
+    const statusDiff = statusWeight[b.status] - statusWeight[a.status]
+    if (statusDiff !== 0) return statusDiff
+    return dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()
+  })
+
+export const filterMessages = (
+  records: MessageRecord[],
+  filter: MessageViewFilter
+): MessageRecord[] => {
+  const keyword = filter.keyword.trim()
+  return records.filter((item) => {
+    const matchKeyword =
+      !keyword ||
+      item.title.includes(keyword) ||
+      item.content.includes(keyword) ||
+      item.bizNo?.includes(keyword)
+    const matchType = !filter.type || item.type === filter.type
+    const matchStatus = !filter.status || item.status === filter.status
+    const matchPriority = !filter.priority || item.priority === filter.priority
+    const matchUnread = !filter.onlyUnread || item.status !== 'read'
+    const matchBizNo = !filter.bizNo || item.bizNo?.includes(filter.bizNo)
+    const matchDate =
+      !filter.dateRange ||
+      filter.dateRange.length !== 2 ||
+      (() => {
+        const target = dayjs(item.createdAt)
+        const start = dayjs(filter.dateRange?.[0])
+        const end = dayjs(filter.dateRange?.[1])
+        return (
+          (target.isAfter(start, 'day') || target.isSame(start, 'day')) &&
+          (target.isBefore(end, 'day') || target.isSame(end, 'day'))
+        )
+      })()
+    return (
+      matchKeyword &&
+      matchType &&
+      matchStatus &&
+      matchPriority &&
+      matchUnread &&
+      matchBizNo &&
+      matchDate
+    )
+  })
+}
+
+export const groupMessages = (records: MessageRecord[]): MessageGroup[] => {
+  const pending = records.filter((item) => item.status === 'failed' || item.status !== 'read')
+  const recentRead = records
+    .filter((item) => item.status === 'read')
+    .sort(
+      (a, b) => dayjs(b.readAt || b.createdAt).valueOf() - dayjs(a.readAt || a.createdAt).valueOf()
+    )
+  const broadcast = records.filter((item) => item.type === '系统' && item.priority !== '高')
+
+  return [
+    { key: 'pending', label: '待处理', items: sortMessages(pending) },
+    { key: 'recentRead', label: '最近已读', items: recentRead.slice(0, 20) },
+    { key: 'broadcast', label: '系统广播', items: sortMessages(broadcast) },
+  ]
+}
+
+export const getMessageGroupByKey = (records: MessageRecord[], key: MessageGroupKey) =>
+  groupMessages(records).find((group) => group.key === key)?.items ?? []
+
+const formatNow = () => new Date().toISOString().slice(0, 19).replace('T', ' ')
+
+export const markMessageRead = (messageId: string) => {
+  updateMessageCenterStore((store) => ({
+    ...store,
+    records: store.records.map((record) => {
+      if (record.id !== messageId || record.status === 'read') return record
+      return { ...record, status: 'read', readAt: formatNow() }
+    }),
+  }))
+}
+
+export const markMessagesRead = (ids: string[]) => {
+  const set = new Set(ids)
+  updateMessageCenterStore((store) => ({
+    ...store,
+    records: store.records.map((record) => {
+      if (!set.has(record.id) || record.status === 'read') return record
+      return { ...record, status: 'read', readAt: formatNow() }
+    }),
+  }))
 }
 
 export const retryMessage = (messageId: string) => {
+  retryMessages([messageId])
+}
+
+export const retryMessages = (ids: string[]) => {
+  const set = new Set(ids)
   updateMessageCenterStore((store) => {
-    const now = new Date().toISOString().slice(0, 19).replace('T', ' ')
+    const now = formatNow()
     return {
       ...store,
       records: store.records.map((record) => {
-        if (record.id !== messageId) return record
+        if (!set.has(record.id)) return record
+        if (record.status !== 'failed') return record
+        if (record.retryCount >= record.maxRetry) return record
         const nextRetry = record.retryCount + 1
         const canSucceed = nextRetry <= record.maxRetry
         return {
@@ -226,20 +328,65 @@ export const retryMessage = (messageId: string) => {
   })
 }
 
-export const markMessageRead = (messageId: string) => {
+export const removeMessageRecords = (ids: string[]) => {
+  const set = new Set(ids)
+  updateMessageCenterStore((store) => ({
+    ...store,
+    records: store.records.filter((record) => !set.has(record.id)),
+  }))
+}
+
+export const handleBatchAction = (action: MessageBatchAction, ids: string[]) => {
+  if (action === 'markRead') {
+    markMessagesRead(ids)
+    return
+  }
+  if (action === 'retry') {
+    retryMessages(ids)
+    return
+  }
+  removeMessageRecords(ids)
+}
+
+export const upsertMessageRecord = (record: MessageRecord) => {
   updateMessageCenterStore((store) => {
-    const now = new Date().toISOString().slice(0, 19).replace('T', ' ')
+    const exists = store.records.some((item) => item.id === record.id)
+    if (!exists) return { ...store, records: [record, ...store.records] }
     return {
       ...store,
-      records: store.records.map((record) => {
-        if (record.id !== messageId) return record
-        if (record.status === 'read') return record
-        return {
-          ...record,
-          status: 'read',
-          readAt: now,
-        }
-      }),
+      records: store.records.map((item) => (item.id === record.id ? record : item)),
     }
   })
+}
+
+export const addMessageRecord = (payload: {
+  id?: string
+  title: string
+  content: string
+  type: MessageType
+  priority?: MessageRecord['priority']
+  recipient?: string
+  route?: string
+  bizNo?: string
+  status?: MessageDeliveryStatus
+  maxRetry?: number
+}) => {
+  const now = formatNow()
+  const record: MessageRecord = {
+    id: payload.id ?? `msg-${Date.now()}`,
+    title: payload.title,
+    content: payload.content,
+    type: payload.type,
+    priority: payload.priority ?? '中',
+    recipient: payload.recipient ?? '运营专员',
+    route: payload.route,
+    bizNo: payload.bizNo,
+    status: payload.status ?? 'success',
+    retryCount: 0,
+    maxRetry: payload.maxRetry ?? 2,
+    createdAt: now,
+    sentAt: now,
+  }
+  upsertMessageRecord(record)
+  return record
 }

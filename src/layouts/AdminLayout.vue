@@ -198,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   DashboardOutlined,
@@ -218,9 +218,11 @@ import {
 import { clearAuth, getName, getRole } from '../utils/auth'
 import { setThemeMode, themeMode } from '../utils/theme'
 import { hasPermission } from '../utils/permissions'
-import { getInboxMessages, updateInboxMessages, type InboxItem } from '../utils/inbox'
+import { getInboxMessages, updateInboxMessages } from '../utils/inbox'
+import type { InboxItem } from '../utils/inbox'
 
-const getPopupContainer = (trigger: HTMLElement) => trigger?.parentNode || document.body
+const getPopupContainer = (trigger?: HTMLElement): HTMLElement =>
+  trigger?.ownerDocument?.body ?? document.body
 const collapsed = ref(false)
 const router = useRouter()
 const route = useRoute()
@@ -706,12 +708,20 @@ const handleAction = (item: InboxItem) => {
 
 const openMessage = (item: InboxItem) => {
   markRead(item)
-  if (item.route) router.push(item.route)
+  if (item.route) {
+    openInbox.value = false
+    router.push(item.route)
+    return
+  }
   openInbox.value = true
 }
 
 onMounted(() => {
   window.addEventListener('inbox-update', syncInbox)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('inbox-update', syncInbox)
 })
 </script>
 
