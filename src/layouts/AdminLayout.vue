@@ -22,9 +22,16 @@
           >
             <component v-if="item.icon" :is="item.icon" class="side-icon" />
             <span v-if="!collapsed" class="side-label">{{ item.label }}</span>
-            <RightOutlined v-if="item.children?.length && !collapsed" class="side-caret" :class="{ open: menuOpenKeys.includes(item.key) }" />
+            <RightOutlined
+              v-if="item.children?.length && !collapsed"
+              class="side-caret"
+              :class="{ open: menuOpenKeys.includes(item.key) }"
+            />
           </div>
-          <div v-if="item.children?.length && menuOpenKeys.includes(item.key) && !collapsed" class="side-children">
+          <div
+            v-if="item.children?.length && menuOpenKeys.includes(item.key) && !collapsed"
+            class="side-children"
+          >
             <div
               v-for="child in item.children"
               :key="child.key"
@@ -63,14 +70,18 @@
               </a-badge>
               <template #overlay>
                 <a-menu>
-                  <a-menu-item v-for="item in inboxPreview" :key="item.id" @click="openMessage(item)">
+                  <a-menu-item
+                    v-for="item in inboxPreview"
+                    :key="item.id"
+                    @click="openMessage(item)"
+                  >
                     <div class="notice-item">
                       <div class="notice-title">{{ item.title }}</div>
                       <div class="notice-desc">{{ item.desc }}</div>
                     </div>
                   </a-menu-item>
                   <a-menu-divider />
-                  <a-menu-item @click="openInbox = true">查看全部站内信</a-menu-item>
+                  <a-menu-item @click="goMessageCenter">查看全部站内信</a-menu-item>
                 </a-menu>
               </template>
             </a-dropdown>
@@ -86,9 +97,9 @@
               </a-space>
               <template #overlay>
                 <a-menu>
-                <a-menu-item @click="router.push('/account/settings')">账户设置</a-menu-item>
-                <a-menu-item @click="router.push('/account/store')">门店信息</a-menu-item>
-                <a-menu-item @click="router.push('/help')">帮助中心</a-menu-item>
+                  <a-menu-item @click="router.push('/account/settings')">账户设置</a-menu-item>
+                  <a-menu-item @click="router.push('/account/store')">门店信息</a-menu-item>
+                  <a-menu-item @click="router.push('/help')">帮助中心</a-menu-item>
                   <a-menu-divider />
                   <a-menu-item @click="onLogout">退出登录</a-menu-item>
                 </a-menu>
@@ -112,7 +123,9 @@
                 trigger="contextmenu"
                 :menu="{ items: tabMenuItems, onClick: onTabMenuClick }"
               >
-                <span class="tab-label" @contextmenu.prevent="setTabContext(tab.key)">{{ tab.title }}</span>
+                <span class="tab-label" @contextmenu.prevent="setTabContext(tab.key)">{{
+                  tab.title
+                }}</span>
               </a-dropdown>
             </template>
           </a-tab-pane>
@@ -131,15 +144,24 @@
 
   <a-drawer v-model:open="openInbox" title="站内信" width="720" :destroy-on-close="true">
     <div class="inbox-toolbar">
-      <a-input v-model:value="inboxKeyword" placeholder="搜索标题/内容" allow-clear style="width: 220px" />
+      <a-input
+        v-model:value="inboxKeyword"
+        placeholder="搜索标题/内容"
+        allow-clear
+        style="width: 220px"
+      />
       <a-segmented v-model:value="inboxType" :options="inboxTypes" />
       <a-switch v-model:checked="onlyUnread" checked-children="未读" un-checked-children="全部" />
     </div>
     <div class="inbox-actions">
       <a-space>
         <a-button size="small" @click="markAllRead">全部标记已读</a-button>
-        <a-button size="small" @click="bulkMarkRead" :disabled="selectedIds.length === 0">批量已读</a-button>
-        <a-button size="small" danger @click="bulkDelete" :disabled="selectedIds.length === 0">批量删除</a-button>
+        <a-button size="small" @click="bulkMarkRead" :disabled="selectedIds.length === 0"
+          >批量已读</a-button
+        >
+        <a-button size="small" danger @click="bulkDelete" :disabled="selectedIds.length === 0"
+          >批量删除</a-button
+        >
       </a-space>
       <div class="inbox-meta">共 {{ filteredInbox.length }} 条</div>
     </div>
@@ -164,7 +186,9 @@
             <div class="inbox-ops">
               <a-button type="link" size="small" @click="handleAction(item)">去处理</a-button>
               <a-button type="link" size="small" @click="markRead(item)">已读</a-button>
-              <a-button type="link" size="small" danger @click="removeMessage(item.id)">删除</a-button>
+              <a-button type="link" size="small" danger @click="removeMessage(item.id)"
+                >删除</a-button
+              >
             </div>
           </div>
         </a-list-item>
@@ -258,6 +282,7 @@ const menuItems: MenuNode[] = [
     perm: 'products:view',
     children: [
       { key: 'products', label: '商品列表' },
+      { key: 'products-inventory', label: '库存中心', perm: 'inventory:view' },
       { key: 'products-brands', label: '品牌管理', perm: 'brands:view' },
       { key: 'products-review', label: '商品审核', perm: 'products:review' },
       { key: 'products-create', label: '创建商品' },
@@ -282,6 +307,7 @@ const menuItems: MenuNode[] = [
     perm: 'marketing:view',
     children: [
       { key: 'marketing', label: '活动总览' },
+      { key: 'marketing-attribution', label: '营销归因', perm: 'marketing:attribution' },
       { key: 'marketing-coupons', label: '优惠券管理' },
       { key: 'marketing-coupons-create', label: '创建优惠券' },
       { key: 'marketing-campaigns-create', label: '创建活动' },
@@ -294,6 +320,7 @@ const menuItems: MenuNode[] = [
     perm: 'ops:view',
     children: [
       { key: 'ops-alerts', label: '异常提醒', perm: 'ops:alerts' },
+      { key: 'ops-messages', label: '消息中心', perm: 'ops:messages' },
       { key: 'ops-tasks', label: '待办任务', perm: 'ops:tasks' },
       { key: 'ops-logs', label: '操作日志', perm: 'ops:logs' },
       { key: 'exports-center', label: '下载中心', perm: 'ops:view' },
@@ -306,6 +333,7 @@ const menuItems: MenuNode[] = [
     perm: 'finance:view',
     children: [
       { key: 'finance', label: '财务概览' },
+      { key: 'finance-closure', label: '资金闭环', perm: 'finance:closure' },
       { key: 'finance-settlements', label: '结算管理' },
       { key: 'finance-invoices', label: '发票管理' },
     ],
@@ -318,6 +346,7 @@ const menuItems: MenuNode[] = [
     children: [
       { key: 'settings', label: '店铺设置' },
       { key: 'settings-merchant', label: '商户信息' },
+      { key: 'settings-open-platform', label: '开放平台', perm: 'open_platform:view' },
       { key: 'settings-assets', label: '资源管理', perm: 'assets:view' },
       { key: 'settings-roles', label: '角色权限' },
       { key: 'settings-permissions', label: '权限矩阵' },
@@ -371,7 +400,6 @@ const visibleMenuItems = computed(() => {
   return filterMenu(roleFiltered)
 })
 
-
 const selectedKey = computed(() => {
   const matched = [...route.matched].reverse().find((item) => item.meta?.key)
   return (matched?.meta?.key as string | undefined) ?? 'dashboard'
@@ -389,9 +417,7 @@ const flattenMenuKeys = (items: MenuNode[], keys: Set<string> = new Set()) => {
 
 const menuKeySet = computed(() => flattenMenuKeys(visibleMenuItems.value))
 const rootMenuKeys = computed(() =>
-  (visibleMenuItems.value ?? [])
-    .map((item) => (item ? String(item.key) : ''))
-    .filter(Boolean)
+  (visibleMenuItems.value ?? []).map((item) => (item ? String(item.key) : '')).filter(Boolean)
 )
 
 const menuParentMap = computed(() => {
@@ -451,6 +477,7 @@ const handleMenuClick = (key: string) => {
     'purchase-inbound': '/supply/purchase',
     reconciliation: '/supply/reconciliation',
     products: '/products',
+    'products-inventory': '/products/inventory',
     'products-detail': '/products/P-10021',
     'products-brands': '/products/brands',
     'products-create': '/products/create',
@@ -459,19 +486,23 @@ const handleMenuClick = (key: string) => {
     'customers-detail': '/customers/C-20088',
     'customers-membership': '/customers/membership',
     marketing: '/marketing',
+    'marketing-attribution': '/marketing/attribution',
     'marketing-coupons': '/marketing/coupons',
     'marketing-coupons-create': '/marketing/coupons/create',
     'marketing-campaigns-create': '/marketing/campaigns/create',
     'ops-center': '/ops/alerts',
     'ops-alerts': '/ops/alerts',
+    'ops-messages': '/ops/messages',
     'ops-tasks': '/ops/tasks',
     'ops-logs': '/ops/logs',
     'exports-center': '/exports',
     finance: '/finance',
+    'finance-closure': '/finance/closure',
     'finance-settlements': '/finance/settlements',
     'finance-invoices': '/finance/invoices',
     settings: '/settings',
     'settings-merchant': '/settings/merchant',
+    'settings-open-platform': '/settings/open-platform',
     'settings-roles': '/settings/roles',
     'settings-permissions': '/settings/permissions',
     'settings-assets': '/settings/assets',
@@ -606,6 +637,11 @@ const onLogout = () => {
   router.replace('/login')
 }
 
+const goMessageCenter = () => {
+  openInbox.value = false
+  router.push('/ops/messages')
+}
+
 const openInbox = ref(false)
 const inboxTypes = ['全部', '交易', '系统', '营销', '审批']
 const inboxType = ref('全部')
@@ -619,8 +655,6 @@ const syncInbox = () => {
 
 const unreadCount = computed(() => inboxMessages.value.filter((item) => item.unread).length)
 const inboxPreview = computed(() => inboxMessages.value.slice(0, 3))
-
-
 
 const filteredInbox = computed(() => {
   return inboxMessages.value.filter((item) => {
@@ -762,7 +796,9 @@ onMounted(() => {
   border-radius: 8px;
   cursor: pointer;
   color: rgba(255, 255, 255, 0.78);
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .side-child:hover {

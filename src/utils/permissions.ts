@@ -9,6 +9,12 @@ export type PermissionKey =
   | 'products:batch'
   | 'products:export'
   | 'products:review'
+  | 'inventory:view'
+  | 'inventory:lock'
+  | 'inventory:stocktake'
+  | 'inventory:replenish'
+  | 'inventory:transfer'
+  | 'inventory:cost'
   | 'brands:view'
   | 'brands:create'
   | 'brands:edit'
@@ -28,12 +34,19 @@ export type PermissionKey =
   | 'customers:view'
   | 'membership:view'
   | 'marketing:view'
+  | 'marketing:attribution'
   | 'decor:view'
   | 'finance:view'
+  | 'finance:closure'
   | 'settings:view'
   | 'settings:permissions'
   | 'assets:view'
+  | 'open_platform:view'
+  | 'open_platform:webhook'
+  | 'open_platform:apikey'
+  | 'open_platform:integration'
   | 'ops:view'
+  | 'ops:messages'
   | 'ops:alerts'
   | 'ops:tasks'
   | 'ops:logs'
@@ -51,21 +64,52 @@ export const PERMISSION_GROUPS: Array<{ group: string; keys: PermissionKey[] }> 
       'products:batch',
       'products:export',
       'products:review',
+      'inventory:view',
+      'inventory:lock',
+      'inventory:stocktake',
+      'inventory:replenish',
+      'inventory:transfer',
+      'inventory:cost',
       'brands:view',
       'brands:create',
       'brands:edit',
       'brands:disable',
     ],
   },
-  { group: '订单管理', keys: ['orders:view', 'orders:export', 'orders:ship', 'after_sales:view', 'after_sales:review'] },
-  { group: '发货中心', keys: ['shipping:center', 'shipping:batch', 'shipping:import', 'shipping:print', 'shipping:export', 'shipping:trace'] },
+  {
+    group: '订单管理',
+    keys: ['orders:view', 'orders:export', 'orders:ship', 'after_sales:view', 'after_sales:review'],
+  },
+  {
+    group: '发货中心',
+    keys: [
+      'shipping:center',
+      'shipping:batch',
+      'shipping:import',
+      'shipping:print',
+      'shipping:export',
+      'shipping:trace',
+    ],
+  },
   { group: '供货管理', keys: ['supply:view'] },
   { group: '客户管理', keys: ['customers:view', 'membership:view'] },
-  { group: '营销中心', keys: ['marketing:view'] },
+  { group: '营销中心', keys: ['marketing:view', 'marketing:attribution'] },
   { group: '店铺装修', keys: ['decor:view'] },
-  { group: '财务中心', keys: ['finance:view'] },
-  { group: '运营中心', keys: ['ops:view', 'ops:alerts', 'ops:tasks', 'ops:logs', 'exports:view'] },
+  { group: '财务中心', keys: ['finance:view', 'finance:closure'] },
+  {
+    group: '运营中心',
+    keys: ['ops:view', 'ops:messages', 'ops:alerts', 'ops:tasks', 'ops:logs', 'exports:view'],
+  },
   { group: '系统设置', keys: ['settings:view', 'settings:permissions', 'assets:view'] },
+  {
+    group: '开放平台',
+    keys: [
+      'open_platform:view',
+      'open_platform:webhook',
+      'open_platform:apikey',
+      'open_platform:integration',
+    ],
+  },
 ]
 
 export type PermissionMatrix = Record<UserRole, PermissionKey[]>
@@ -80,6 +124,12 @@ const DEFAULT_MATRIX: PermissionMatrix = {
     'products:batch',
     'products:export',
     'products:review',
+    'inventory:view',
+    'inventory:lock',
+    'inventory:stocktake',
+    'inventory:replenish',
+    'inventory:transfer',
+    'inventory:cost',
     'brands:view',
     'brands:create',
     'brands:edit',
@@ -99,15 +149,21 @@ const DEFAULT_MATRIX: PermissionMatrix = {
     'customers:view',
     'membership:view',
     'marketing:view',
+    'marketing:attribution',
     'decor:view',
     'assets:view',
+    'open_platform:view',
+    'open_platform:webhook',
+    'open_platform:apikey',
+    'open_platform:integration',
     'ops:view',
+    'ops:messages',
     'ops:alerts',
     'ops:tasks',
     'ops:logs',
     'exports:view',
   ],
-  finance: ['dashboard:view', 'finance:view'],
+  finance: ['dashboard:view', 'finance:view', 'finance:closure'],
 }
 
 const STORAGE_KEY = 'permission-matrix'

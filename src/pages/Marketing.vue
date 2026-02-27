@@ -34,7 +34,15 @@
           <a-table :columns="columns" :data-source="campaigns" :pagination="{ pageSize: 5 }">
             <template #bodyCell="{ column, record }">
               <template v-if="column.key === 'status'">
-                <a-tag :color="record.status === '进行中' ? 'green' : record.status === '筹备中' ? 'blue' : 'default'">
+                <a-tag
+                  :color="
+                    record.status === '进行中'
+                      ? 'green'
+                      : record.status === '筹备中'
+                        ? 'blue'
+                        : 'default'
+                  "
+                >
                   {{ record.status }}
                 </a-tag>
               </template>
@@ -79,11 +87,10 @@
 import { h } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const campaignExtra = h(
-  RouterLink,
-  { to: '/marketing/coupons' },
-  { default: () => '管理优惠券' }
-)
+const campaignExtra = h('div', { style: 'display:flex;gap:12px;' }, [
+  h(RouterLink, { to: '/marketing/attribution' }, { default: () => '效果归因' }),
+  h(RouterLink, { to: '/marketing/coupons' }, { default: () => '管理优惠券' }),
+])
 const columns = [
   { title: '活动名称', dataIndex: 'name', key: 'name' },
   { title: '时间', dataIndex: 'time', key: 'time' },

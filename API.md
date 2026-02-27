@@ -279,6 +279,75 @@ POST /shipping/batch
 用途：批量发货
 Body
 
+开放平台
+GET /open-platform/webhooks
+用途：Webhook 列表
+Query
+
+keyword 名称/回调地址
+enabled 是否启用
+page / pageSize
+POST /open-platform/webhooks
+用途：创建 Webhook
+Body
+
+name 名称
+url 回调地址
+events 订阅事件数组（如 order.created）
+timeoutSec 超时秒数
+retryLimit 重试次数
+enabled 是否启用
+GET /open-platform/api-keys
+用途：API Key 列表
+Query
+
+keyword 应用名称
+status 状态（active/disabled/revoked）
+page / pageSize
+POST /open-platform/api-keys
+用途：创建 API Key
+Body
+
+appName 应用名称
+scopes 权限范围数组
+ipWhitelist IP 白名单
+expireAt 过期时间（YYYY-MM-DD）
+Response
+
+{
+"code": 0,
+"message": "ok",
+"data": {
+"id": "ak_102",
+"keyPrefix": "ak_live_ab12",
+"secret": "sk_xxx"
+}
+}
+GET /open-platform/integrations
+用途：第三方对接列表（ERP/WMS）
+Query
+
+category ERP/WMS
+status connected/error/disconnected
+page / pageSize
+PUT /open-platform/integrations/:id
+用途：更新对接配置
+Body
+
+syncMode push/pull
+endpoint 对接地址
+appKey 应用密钥
+warehouseMapping 仓库映射
+POST /open-platform/integrations/:id/sync
+用途：手动触发同步
+Response
+
+{
+"code": 0,
+"message": "ok",
+"data": { "taskId": "sync_202602271104" }
+}
+
 fileUrl 上传的模板文件地址
 GET /shipping/tracking
 用途：物流轨迹
