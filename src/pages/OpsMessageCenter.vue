@@ -199,7 +199,7 @@ const effectiveFilter = computed<MessageViewFilter>(() => ({
 const filteredRecords = computed(() => filterMessages(sortedRecords.value, effectiveFilter.value))
 
 const pendingMessages = computed(() =>
-  filteredRecords.value.filter((item) => item.status !== 'read' || item.status === 'failed')
+  filteredRecords.value.filter((item) => item.status !== 'read')
 )
 const recentReadMessages = computed(() =>
   filteredRecords.value.filter((item) => item.status === 'read').slice(0, 20)
@@ -261,14 +261,7 @@ const kpiCards = computed(() => [
   },
 ])
 
-const receiptRows = computed(() =>
-  [...sortedRecords.value].map((item) => ({
-    ...item,
-    status: item.status === 'read' ? '已读' : item.status === 'failed' ? '失败' : '未读',
-    sentAt: item.sentAt || '-',
-    readAt: item.readAt || '-',
-  }))
-)
+const receiptRows = computed(() => [...sortedRecords.value])
 
 const selectMessage = (id: string) => {
   selectedId.value = id

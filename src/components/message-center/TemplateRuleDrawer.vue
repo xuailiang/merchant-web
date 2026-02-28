@@ -72,7 +72,39 @@
               :data-source="receipts"
               row-key="id"
               :pagination="{ pageSize: 6 }"
-            />
+            >
+              <template #bodyCell="{ column, record }">
+                <template v-if="column.key === 'status'">
+                  <a-tag
+                    :color="
+                      record.status === 'read'
+                        ? 'green'
+                        : record.status === 'failed'
+                          ? 'red'
+                          : record.status === 'success'
+                            ? 'blue'
+                            : 'orange'
+                    "
+                  >
+                    {{
+                      record.status === 'read'
+                        ? '已读'
+                        : record.status === 'failed'
+                          ? '失败'
+                          : record.status === 'success'
+                            ? '已发送'
+                            : '处理中'
+                    }}
+                  </a-tag>
+                </template>
+                <template v-else-if="column.key === 'sentAt'">
+                  {{ record.sentAt || '-' }}
+                </template>
+                <template v-else-if="column.key === 'readAt'">
+                  {{ record.readAt || '-' }}
+                </template>
+              </template>
+            </a-table>
           </a-card>
         </a-col>
       </a-row>

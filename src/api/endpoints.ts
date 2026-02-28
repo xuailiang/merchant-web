@@ -1,4 +1,14 @@
 import { request } from './client'
+import type {
+  CreateProductDraftDto,
+  CreateProductSubmitDto,
+  CreateProductValidateResultDto,
+} from '../types/create-product'
+import type {
+  ProductFilterModel,
+  ProductSummaryStats,
+  ProductViewPreset,
+} from '../types/product-list'
 
 export type PagedResult<T> = {
   total: number
@@ -21,6 +31,10 @@ export type ProductItem = {
   image: string
   channel: string
   shop: string
+  auditStatus?: '待审核' | '审核通过' | '审核驳回'
+  warningLevel?: 'normal' | 'medium' | 'high'
+  mediaCompleteness?: number
+  updatedBy?: string
 }
 
 export type ProductDetailDto = ProductItem & {
@@ -239,6 +253,14 @@ export const fetchProducts = (params: {
   return request<PagedResult<ProductItem>>(`/products?${query.toString()}`)
 }
 
+export const fetchProductSummary = () => request<ProductSummaryStats>('/products/summary')
+
+export const saveProductViewPreset = (payload: { name: string; filters: ProductFilterModel }) =>
+  request<ProductViewPreset>('/products/views', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
 export const fetchProductDetail = (id: string) => request<ProductDetailDto>(`/products/${id}`)
 
 export const fetchProductSkuList = (
@@ -269,6 +291,35 @@ export const fetchProductOperationLogs = (
   })
   return request<PagedResult<ProductOperationLogDto>>(`/products/${id}/logs?${query.toString()}`)
 }
+
+export const saveProductDraft = (payload: CreateProductDraftDto) =>
+  request<{ id: string }>('/products/drafts', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+export const fetchProductDraft = (id: string) =>
+  request<CreateProductDraftDto>(`/products/drafts/${id}`)
+
+export const validateProductBeforeSubmit = (payload: CreateProductSubmitDto) =>
+  request<CreateProductValidateResultDto>('/products/validate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+export const createProductForReview = (payload: CreateProductSubmitDto) =>
+  request<{ id: string; status: string }>('/products', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+export const fetchProductMeta = () =>
+  request<{
+    brands: string[]
+    categories: string[]
+    taxes: string[]
+    shippings: string[]
+  }>('/products/meta')
 
 export const fetchOrders = (params: {
   orderId?: string

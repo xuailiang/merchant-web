@@ -71,6 +71,7 @@ export const applyOrderRiskPriority = (actionKeys: string[], riskFlags: string[]
 export const productStatusConfig: Record<string, StatusMeta> = {
   上架中: { label: '上架中', color: 'green' },
   库存紧张: { label: '库存紧张', color: 'orange' },
+  待审核: { label: '待审核', color: 'blue' },
   已下架: { label: '已下架', color: 'default' },
 }
 
@@ -89,11 +90,13 @@ export const productActionConfig: Record<string, ActionDef> = {
   price: { key: 'price', label: '修改价格', permission: 'products:edit' },
   copy: { key: 'copy', label: '复制链接' },
   replenish: { key: 'replenish', label: '补货', permission: 'products:edit' },
+  review: { key: 'review', label: '提交审核', permission: 'products:review' },
 }
 
 export const productStatusActions: Record<string, string[]> = {
   上架中: ['view', 'edit', 'down', 'stock', 'price', 'copy'],
   库存紧张: ['view', 'edit', 'replenish', 'stock', 'price', 'copy'],
+  待审核: ['view', 'edit', 'review', 'copy'],
   已下架: ['view', 'edit', 'up', 'copy'],
 }
 
