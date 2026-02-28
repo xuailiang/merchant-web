@@ -1,72 +1,92 @@
-# 项目概述
-这是一个针对电子商务平台的项目，旨在为商家提供便捷的在线交易解决方案。
+# Merchant Admin (商家管理后台)
 
-# 技术栈
-- **前端**: React, Redux
-- **后端**: Node.js, Express
-- **数据库**: MongoDB
+这是一个基于 Vue 3 + Vite + Ant Design Vue 构建的高性能电子商务商家管理平台。该项目为商家提供了一站式的商品管理、订单处理、店铺装修、财务结算及营销推广方案。
 
-# 项目结构
-```
-merchant-web
+## 🚀 技术栈
+
+- **框架**: [Vue 3](https://v3.vuejs.org/) (Composition API, `<script setup>`)
+- **构建工具**: [Vite](https://vitejs.dev/)
+- **语言**: [TypeScript](https://www.typescriptlang.org/)
+- **UI 组件库**: [Ant Design Vue 4.x](https://www.antdv.com/)
+- **路由**: [Vue Router 4.x](https://next.router.vuejs.org/)
+- **图表**: [AntV G2Plot](https://g2plot.antv.vision/)
+- **网络请求**: [Axios](https://axios-http.com/)
+- **本地 Mock**: [MSW (Mock Service Worker)](https://mswjs.io/)
+- **代码规范**: ESLint, Prettier, Husky, lint-staged
+
+## 📂 项目结构
+
+```text
+merchant-admin
 ├── src
-│   ├── components  // 组件
-│   ├── pages  // 页面
-│   ├── utils  // 工具
-│   └── styles  // 样式
-├── public  // 静态文件
-└── package.json  // 项目依赖
-```
-详细解释：
-- **components**: 复用组件
-- **pages**: 页面级组件
-- **utils**: 工具函数
-- **styles**: 样式文件
-
-# 快速开始
-1. 克隆项目：`git clone https://github.com/xuailiang/merchant-web.git`
-2. 进入项目目录：`cd merchant-web`
-3. 安装依赖：`npm install`
-4. 启动项目：`npm start`
-
-# 开发标准
-- 所有代码必须经过 ESLint 检查。
-- 提交信息要清晰，包含相关的价值。
-
-# 核心依赖说明
-- **Express**: 用于构建 Web 应用的框架。
-- **Mongoose**: MongoDB 的 ODM 库。
-
-# 常见问题与代码示例
-**Q: 如何添加新的路由？**  
-**A:** 在 `src/routes` 中创建新的路由文件，并在 `index.js` 中引入。  
-```javascript
-const newRoute = require('./newRoute');
-app.use('/new', newRoute);
+│   ├── api           // API 接口定义与配置
+│   ├── components    // 公用组件 (包含业务模块化组件)
+│   │   ├── create-product  // 商品发布向导组件
+│   │   ├── decor           // 店铺装修引擎组件
+│   │   └── products        // 商品列表及筛选组件
+│   ├── composables   // 组合式 API (业务逻辑复用)
+│   ├── layouts       // 页面布局模板
+│   ├── mock          // MSW 模拟数据与处理函数
+│   ├── pages         // 路由页面 (40+ 业务页面)
+│   ├── router        // 路由配置
+│   ├── styles        // 全局样式与模块化样式
+│   ├── types         // TypeScript 类型定义
+│   └── utils         // 工具函数与 Hooks
+├── public            // 静态资源文件
+├── vite.config.ts    // Vite 配置文件
+└── package.json      // 项目依赖与脚本
 ```
 
-# 部署指南
-支持以下平台：
-- **Heroku**: 利用 `heroku deploy` 部署。
-- **Docker**: 使用 Dockerfile 构建镜像。
+## ✨ 核心功能
 
-# 功能开发进展
-- [x] 用户登录
-- [ ] 支付集成
-- [ ] 数据分析
+- **商品发布系统**: 四步向导式发布流程，集成自动保存、复杂规格 (SKU) 管理及多媒体素材管理。
+- **店铺装修引擎**: 可视化拖拽构建移动端店铺首页，支持多种组件配置与实时预览。
+- **订单管理中心**: 全面的订单处理流程、售后服务、发货管理及面单打印。
+- **财务结算中心**: 包含对账单管理、提现申请、发票处理结算分析。
+- **营销中心**: 支持优惠券创建、活动报名、推广归因分析等功能。
+- **运营任务**: 集成操作日志、任务流转及权限 (RBAC) 细粒度控制。
 
-# 贡献指南
-欢迎贡献！请遵循以下流程：
-1. Fork 本项目。
-2. 创建新分支：`git checkout -b my-feature`
-3. 提交更改��推送：`git push origin my-feature`
-4. 创建 Pull Request。
+## 🛠️ 快速开始
 
-# 学习资源
-- [React 官方文档](https://reactjs.org/docs/getting-started.html)
-- [Node.js 官方文档](https://nodejs.org/en/docs/)
+### 1. 安装环境
 
-# 项目统计
-- 总提交数: 120  
-- 参与者: 5  
-- 问题数: 20  
+确保你已安装 Node.js (建议 v18+)
+
+### 2. 安装依赖
+
+```bash
+npm install
+```
+
+### 3. 开发环境运行
+
+```bash
+npm run dev
+```
+
+### 4. 代码质量检查 (Lint)
+
+```bash
+# 检查并自动修复错误
+npm run lint:fix
+
+# 运行类型检查
+npm run typecheck
+```
+
+### 5. 构建生产版本
+
+```bash
+npm run build
+```
+
+## 📜 开发标准
+
+- **组件化**: 优先将复杂组件拆分为更小的功能单元。
+- **类型安全**: 必须为所有 API 返回值 and 业务对象定义 TypeScript 接口。
+- **状态管理**: 简单状态优先使用 `reactive`/`ref`，复杂状态可考虑跨组件 Context。
+- **Mock**: 开发新功能前，优先在 `src/mock` 中定义接口模拟数据。
+
+## 📦 部署
+
+运行 `npm run build` 后，将 `dist` 目录下的静态文件部署至 Nginx 或类似 Web 服务器即可。
